@@ -1,0 +1,10 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# We don't copy package.json here because we will use a volume for live-reload.
+# This Dockerfile is solely for the development environment to run the dev server.
+
+EXPOSE 3000
+
+CMD ["npm", "run", "dev"]
