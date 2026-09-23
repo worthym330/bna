@@ -1,0 +1,333 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// -----------------------------------------------------------------------------
+// CORE SYSTEM MODELS
+// -----------------------------------------------------------------------------
+
+model User {
+  id            String               @id @default(uuid())
+  email         String               @unique
+  passwordHash  String?
+  name          String?
+  isSuperAdmin  Boolean              @default(false)
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  organizations OrganizationMember[]
+  auditLogs     AuditLog[]
+}
+
+model Organization {
+  id                  String               @id @default(uuid())
+  legalName           String
+  displayName         String
+  email               String?
+  phone               String?
+  website             String?
+  pan                 String?
+  gstin               String?
+  defaultCurrency     String               @default("INR")
+  defaultCountry      String               @default("India")
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  members             OrganizationMember[]
+  offices             Office[]
+  clients             Client[]
+  projects            Project[]
+  auditLogs           AuditLog[]
+  roles               Role[]
+  googleConnectionId  String?              // Future Google Drive integration
+  googleCredential    GoogleCredential?
+  documentAssets      DocumentAsset[]
+  invoiceSeries       InvoiceSeries[]
+  invoiceTemplates    InvoiceTemplate[]
+  invoices            Invoice[]
+}
+
+model OrganizationMember {
+  id             String       @id @default(uuid())
+  userId         String
+  organizationId String
+  roleId         String?      
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  role           Role?        @relation(fields: [roleId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, organizationId])
+}
+
+model Role {
+  id             String       @id @default(uuid())
+  organizationId String?      // Null for system roles, populated for custom org roles
+  name           String
+  description    String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  permissions    RolePermission[]
+  members        OrganizationMember[]
+
+  @@unique([organizationId, name])
+}
+
+model Permission {
+  id          String   @id @default(uuid())
+  name        String   @unique // e.g., 'invoices.create', 'clients.view'
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  roles       RolePermission[]
+}
+
+model RolePermission {
+  id           String     @id @default(uuid())
+  roleId       String
+  permissionId String
+  createdAt    DateTime   @default(now())
+
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+}
+
+model AuditLog {
+  id             String       @id @default(uuid())
+  organizationId String
+  userId         String?
+  action         String
+  entityType     String
+  entityId       String
+  previousValue  Json?
+  newValue       Json?
+  createdAt      DateTime     @default(now())
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+}
+
+// -----------------------------------------------------------------------------
+// MASTER DATA MODELS
+// -----------------------------------------------------------------------------
+
+model Office {
+  id             String       @id @default(uuid())
+  organizationId String
+  siteName       String
+  addressLine1   String
+  addressLine2   String?
+  city           String
+  state          String
+  country        String
+  pincode        String?
+  gstin          String?
+  contactPerson  String?
+  contactPhone   String?
+  contactEmail   String?
+  siteCode       String?
+  isActive       Boolean      @default(true)
+  deletedAt      DateTime?    // Soft delete
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+
+model Client {
+  id                 String       @id @default(uuid())
+  organizationId     String
+  clientName         String
+  clientCode         String?
+  contactPerson      String?
+  email              String?
+  phone              String?
+  alternatePhone     String?
+  website            String?
+  gstin              String?
+  pan                String?
+  taxRegistrationType String?
+  state              String?
+  country            String?
+  deletedAt          DateTime?    // Soft delete
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  organization       Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  addresses          ClientAddress[]
+  projects           Project[]
+  invoices           Invoice[]
+
+  @@unique([organizationId, clientCode])
+}
+
+model ClientAddress {
+  id             String       @id @default(uuid())
+  clientId       String
+  addressType    String       // e.g., BILLING, SHIPPING
+  addressLine1   String
+  addressLine2   String?
+  city           String
+  state          String
+  country        String
+  pincode        String?
+  gstin          String?
+  contactPerson  String?
+  contactPhone   String?
+  contactEmail   String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  client         Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
+}
+
+model Project {
+  id                String       @id @default(uuid())
+  organizationId    String
+  clientId          String
+  projectName       String
+  projectCode       String?
+  projectAddress    String?
+  workOrderNumber   String?
+  workOrderDate     DateTime?
+  projectStartDate  DateTime?
+  projectEndDate    DateTime?
+  sacCategory       String?
+  description       String?
+  status            String       @default("ACTIVE")
+  deletedAt         DateTime?    // Soft delete
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  organization      Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  client            Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  invoices          Invoice[]
+
+  @@unique([organizationId, projectCode])
+}
+
+// -----------------------------------------------------------------------------
+// INTEGRATION & ASSET MODELS
+// -----------------------------------------------------------------------------
+
+model GoogleCredential {
+  id             String       @id @default(uuid())
+  organizationId String       @unique
+  accessToken    String
+  refreshToken   String
+  expiryDate     DateTime
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+
+model DocumentAsset {
+  id             String       @id @default(uuid())
+  organizationId String
+  name           String
+  type           String       // 'LETTERHEAD', 'SIGNATURE', 'STAMP', 'INVOICE_PDF'
+  driveFileId    String
+  mimeType       String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+
+// -----------------------------------------------------------------------------
+// BILLING & NUMBERING MODELS
+// -----------------------------------------------------------------------------
+
+model InvoiceSeries {
+  id              String       @id @default(uuid())
+  organizationId  String
+  name            String       // e.g., 'Standard FY23-24'
+  prefix          String       // e.g., 'INV-'
+  suffix          String       // e.g., '-BOM'
+  padding         Int          // e.g., 4 (results in 0001)
+  currentSequence Int          @default(0)
+  isActive        Boolean      @default(true)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  invoices        Invoice[]
+
+  @@unique([organizationId, name])
+}
+
+model InvoiceTemplate {
+  id             String       @id @default(uuid())
+  organizationId String
+  name           String
+  htmlContent    String       @db.Text
+  designConfig   Json?
+  isActive       Boolean      @default(true)
+  isDefault      Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  invoices       Invoice[]
+
+  @@unique([organizationId, name])
+}
+
+model Invoice {
+  id              String       @id @default(uuid())
+  organizationId  String
+  clientId        String
+  projectId       String?
+  seriesId        String?
+  templateId      String?
+  type            String       @default("INVOICE") // INVOICE, CREDIT_NOTE
+  status          String       @default("DRAFT") // DRAFT, FINALIZED, CANCELLED
+  invoiceNumber   String?      @unique
+  invoiceDate     DateTime
+  dueDate         DateTime?
+  subTotal        Float        @default(0)
+  taxTotal        Float        @default(0)
+  totalAmount     Float        @default(0)
+  notes           String?      @db.Text
+  terms           String?      @db.Text
+  driveFileId     String?
+  // Credit Note specific fields
+  linkedInvoiceId String?      // The original invoice this credit note is against
+  reason          String?      @db.Text // Reason for credit note
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  client          Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  project         Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  series          InvoiceSeries? @relation(fields: [seriesId], references: [id], onDelete: SetNull)
+  template        InvoiceTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  lineItems       InvoiceLineItem[]
+}
+
+model InvoiceLineItem {
+  id            String       @id @default(uuid())
+  invoiceId     String
+  description   String
+  hsnSac        String?
+  quantity      Float
+  unitPrice     Float
+  taxRate       Float        // percentage, e.g., 18
+  taxAmount     Float
+  totalAmount   Float
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  invoice       Invoice      @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+}
