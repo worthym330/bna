@@ -8,7 +8,7 @@ import * as z from "zod";
 export async function getProjects() {
   const { organization } = await getTenantSession();
   return prisma.project.findMany({
-    where: { organizationId: organization.id, deletedAt: null },
+    where: { organizationId: organization!.id, deletedAt: null },
     include: { client: true },
     orderBy: { createdAt: "desc" },
   });
@@ -23,7 +23,7 @@ export async function createProject(data: z.infer<typeof projectSchema>) {
       workOrderDate: parsed.workOrderDate ? new Date(parsed.workOrderDate) : null,
       projectStartDate: parsed.projectStartDate ? new Date(parsed.projectStartDate) : null,
       projectEndDate: parsed.projectEndDate ? new Date(parsed.projectEndDate) : null,
-      organizationId: organization.id,
+      organizationId: organization!.id,
     },
   });
   revalidatePath("/projects");
@@ -34,7 +34,7 @@ export async function updateProject(id: string, data: z.infer<typeof projectSche
   const { organization } = await getTenantSession();
   
   const existingProject = await prisma.project.findUnique({ where: { id } });
-  if (!existingProject || existingProject.organizationId !== organization.id) {
+  if (!existingProject || existingProject.organizationId !== organization!.id) {
     throw new Error("Project not found");
   }
 
@@ -57,7 +57,7 @@ export async function deleteProject(id: string) {
   const { organization } = await getTenantSession();
   
   const existingProject = await prisma.project.findUnique({ where: { id } });
-  if (!existingProject || existingProject.organizationId !== organization.id) {
+  if (!existingProject || existingProject.organizationId !== organization!.id) {
     throw new Error("Project not found");
   }
 

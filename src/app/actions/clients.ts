@@ -8,7 +8,7 @@ import * as z from "zod";
 export async function getClients() {
   const { organization } = await getTenantSession();
   return prisma.client.findMany({
-    where: { organizationId: organization.id, deletedAt: null },
+    where: { organizationId: organization!.id, deletedAt: null },
     orderBy: { clientName: "asc" },
   });
 }
@@ -18,7 +18,7 @@ export async function createClient(data: z.infer<typeof clientSchema>) {
   const parsed = clientSchema.parse(data);
   const client = await prisma.client.create({
     data: {
-      organizationId: organization.id,
+      organizationId: organization!.id,
       clientName: parsed.clientName,
       clientCode: parsed.clientCode || null,
       email: parsed.email || null,
@@ -35,7 +35,7 @@ export async function updateClient(id: string, data: z.infer<typeof clientSchema
   const { organization } = await getTenantSession();
   
   const existingClient = await prisma.client.findUnique({ where: { id } });
-  if (!existingClient || existingClient.organizationId !== organization.id) {
+  if (!existingClient || existingClient.organizationId !== organization!.id) {
     throw new Error("Client not found");
   }
 
@@ -60,7 +60,7 @@ export async function deleteClient(id: string) {
   const { organization } = await getTenantSession();
   
   const existingClient = await prisma.client.findUnique({ where: { id } });
-  if (!existingClient || existingClient.organizationId !== organization.id) {
+  if (!existingClient || existingClient.organizationId !== organization!.id) {
     throw new Error("Client not found");
   }
 

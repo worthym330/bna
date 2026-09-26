@@ -8,7 +8,7 @@ import * as z from "zod";
 export async function getOffices() {
   const { organization } = await getTenantSession();
   return prisma.office.findMany({
-    where: { organizationId: organization.id, deletedAt: null },
+    where: { organizationId: organization!.id, deletedAt: null },
     orderBy: { siteName: "asc" },
   });
 }
@@ -19,7 +19,7 @@ export async function createOffice(data: z.infer<typeof officeSchema>) {
   const office = await prisma.office.create({
     data: {
       ...parsed,
-      organizationId: organization.id,
+      organizationId: organization!.id,
     },
   });
   revalidatePath("/offices");
@@ -30,7 +30,7 @@ export async function updateOffice(id: string, data: z.infer<typeof officeSchema
   const { organization } = await getTenantSession();
   
   const existingOffice = await prisma.office.findUnique({ where: { id } });
-  if (!existingOffice || existingOffice.organizationId !== organization.id) {
+  if (!existingOffice || existingOffice.organizationId !== organization!.id) {
     throw new Error("Office not found");
   }
 
@@ -48,7 +48,7 @@ export async function deleteOffice(id: string) {
   const { organization } = await getTenantSession();
   
   const existingOffice = await prisma.office.findUnique({ where: { id } });
-  if (!existingOffice || existingOffice.organizationId !== organization.id) {
+  if (!existingOffice || existingOffice.organizationId !== organization!.id) {
     throw new Error("Office not found");
   }
 

@@ -38,7 +38,7 @@ export async function uploadAssetAction(formData: FormData, assetType: "LETTERHE
   const { uploadAsset } = await import("@/lib/drive");
 
   await uploadAsset(
-    organization.id,
+    organization!.id,
     buffer,
     file.name,
     file.type,

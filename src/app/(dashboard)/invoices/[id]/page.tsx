@@ -9,7 +9,7 @@ export default async function InvoiceDetailPage(props: { params: Promise<{ id: s
   const { organization } = await getTenantSession();
 
   const invoice = await prisma.invoice.findUnique({
-    where: { id: params.id, organizationId: organization.id },
+    where: { id: params.id, organizationId: organization!.id },
     include: {
       client: true,
       project: true,
@@ -24,7 +24,7 @@ export default async function InvoiceDetailPage(props: { params: Promise<{ id: s
   let linkedInvoice = null;
   if (invoice.linkedInvoiceId) {
     linkedInvoice = await prisma.invoice.findFirst({
-      where: { id: invoice.linkedInvoiceId, organizationId: organization.id },
+      where: { id: invoice.linkedInvoiceId, organizationId: organization!.id },
       select: { id: true, invoiceNumber: true }
     });
   }

@@ -33,7 +33,7 @@ const creditNoteSchema = z.object({
 
 type FormData = z.infer<typeof creditNoteSchema>;
 
-export function CreateCreditNoteForm({ clients, projects, series, templates, finalizedInvoices, linkedInvoice }: any) {
+export function CreateCreditNoteForm({ clients, projects, series, templates, finalizedInvoices, linkedInvoice, organization }: any) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [selectedLinkedInvoice, setSelectedLinkedInvoice] = useState<any>(linkedInvoice || null);
@@ -41,7 +41,7 @@ export function CreateCreditNoteForm({ clients, projects, series, templates, fin
   const defaultTemplate = templates?.find((t: any) => t.isDefault);
 
   const { register, control, handleSubmit, watch, setValue, formState: { errors } } = useForm<FormData>({
-    resolver: zodResolver(creditNoteSchema),
+    resolver: zodResolver(creditNoteSchema) as any,
     defaultValues: {
       invoiceDate: new Date().toISOString().split('T')[0],
       templateId: defaultTemplate?.id || "",
@@ -63,17 +63,32 @@ export function CreateCreditNoteForm({ clients, projects, series, templates, fin
   const { fields, append, remove } = useFieldArray({ control, name: "lineItems" });
   const watchLineItems = watch("lineItems");
 
+  const watchClientId = watch("clientId");
+  
   const totals = useMemo(() => {
-    return watchLineItems.reduce(
-      (acc, item) => {
-        const { taxAmount, lineTotal } = calculateLineItemTax(
-          item.quantity || 0, item.unitPrice || 0, item.taxRate || 0
-        );
-        return { subTotal: acc.subTotal + (item.quantity * item.unitPrice), taxTotal: acc.taxTotal + taxAmount, total: acc.total + lineTotal };
-      },
-      { subTotal: 0, taxTotal: 0, total: 0 }
-    );
-  }, [watchLineItems]);
+    let subTotal = 0;
+    let taxTotal = 0;
+    let cgst = 0;
+    let sgst = 0;
+    let igst = 0;
+
+    const selectedClient = clients.find((c: any) => c.id === watchClientId);
+    const orgState = organization?.defaultCountry || ""; 
+    const clientState = selectedClient?.state || "";
+
+    watchLineItems?.forEach(item => {
+      const amount = (item.quantity || 0) * (item.unitPrice || 0);
+      subTotal += amount;
+      
+      const tax = calculateLineItemTax(amount, item.taxRate || 0, orgState, clientState);
+      taxTotal += tax.totalTax;
+      cgst += tax.cgst;
+      sgst += tax.sgst;
+      igst += tax.igst;
+    });
+
+    return { subTotal, taxTotal, totalAmount: subTotal + taxTotal, cgst, sgst, igst };
+  }, [watchLineItems, watchClientId, clients, organization]);
 
   const handleLinkedInvoiceChange = (invoiceId: string) => {
     const inv = finalizedInvoices.find((i: any) => i.id === invoiceId);
@@ -87,9 +102,11 @@ export function CreateCreditNoteForm({ clients, projects, series, templates, fin
   const onSubmit = async (data: FormData) => {
     setLoading(true);
     try {
+      const selectedClient = clients.find((c: any) => c.id === data.clientId);
       const enrichedLineItems = data.lineItems.map(item => {
-        const { taxAmount, lineTotal } = calculateLineItemTax(item.quantity, item.unitPrice, item.taxRate);
-        return { ...item, taxAmount, totalAmount: lineTotal };
+        const amount = item.quantity * item.unitPrice;
+        const tax = calculateLineItemTax(amount, item.taxRate, organization?.defaultCountry || "", selectedClient?.state || "");
+        return { ...item, taxAmount: tax.totalTax, totalAmount: amount + tax.totalTax };
       });
 
       const result = await createDraftCreditNoteAction({ ...data, lineItems: enrichedLineItems });
@@ -197,7 +214,8 @@ export function CreateCreditNoteForm({ clients, projects, series, templates, fin
           </div>
           {fields.map((field, index) => {
             const item = watchLineItems[index];
-            const { taxAmount, lineTotal } = calculateLineItemTax(item?.quantity || 0, item?.unitPrice || 0, item?.taxRate || 0);
+            const amount = (item?.quantity || 0) * (item?.unitPrice || 0);
+            const tax = calculateLineItemTax(amount, item?.taxRate || 0, organization?.defaultCountry || "", clients.find((c: any) => c.id === watch("clientId"))?.state || "");
             return (
               <div key={field.id} className="grid grid-cols-12 gap-2 items-center bg-slate-50 rounded-lg p-2">
                 <div className="col-span-12 md:col-span-4">
@@ -216,7 +234,7 @@ export function CreateCreditNoteForm({ clients, projects, series, templates, fin
                   <Input type="number" step="0.01" placeholder="Tax%" {...register(`lineItems.${index}.taxRate`)} />
                 </div>
                 <div className="col-span-4 md:col-span-1 text-right font-semibold text-sm text-slate-700">
-                  ₹{lineTotal.toFixed(2)}
+                  ₹{(amount + tax.totalTax).toFixed(2)}
                 </div>
                 <div className="col-span-1">
                   {fields.length > 1 && (
@@ -237,7 +255,7 @@ export function CreateCreditNoteForm({ clients, projects, series, templates, fin
             <div className="flex justify-between"><span className="text-slate-500">Sub Total</span><span>₹{totals.subTotal.toFixed(2)}</span></div>
             <div className="flex justify-between"><span className="text-slate-500">Tax</span><span>₹{totals.taxTotal.toFixed(2)}</span></div>
             <div className="flex justify-between font-bold text-base border-t pt-2 text-red-600">
-              <span>Total Credit</span><span>₹{totals.total.toFixed(2)}</span>
+              <span>Total Credit</span><span>₹{totals.totalAmount.toFixed(2)}</span>
             </div>
           </div>
         </div>

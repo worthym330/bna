@@ -85,7 +85,7 @@ export default function GrapesEditor({ initialHtml, assets = [], onSave, onClose
       // Enable native GrapesJS resizing for table cells
       const domc = e.Components;
       domc.addType('cell', {
-        isComponent: el => el.tagName === 'TD' || el.tagName === 'TH',
+        isComponent: (el: HTMLElement) => el.tagName === 'TD' || el.tagName === 'TH',
         model: {
           defaults: {
             name: 'Cell',

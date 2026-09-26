@@ -7,15 +7,15 @@ export default async function SettingsPage() {
   const { organization } = await getTenantSession();
 
   const googleCreds = await prisma.googleCredential.findUnique({
-    where: { organizationId: organization.id },
+    where: { organizationId: organization!.id },
   });
 
   const assets = await prisma.documentAsset.findMany({
-    where: { organizationId: organization.id },
+    where: { organizationId: organization!.id },
   });
 
   const invoiceSeries = await prisma.invoiceSeries.findMany({
-    where: { organizationId: organization.id },
+    where: { organizationId: organization!.id },
     orderBy: { createdAt: 'desc' }
   });
 

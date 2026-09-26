@@ -8,7 +8,7 @@ import { redirect } from "next/navigation";
 export async function createDraftInvoiceAction(data: any) {
   const { organization } = await getTenantSession();
   if (!organization) throw new Error("Unauthorized");
-  const invoice = await saveDraftInvoice(data, organization.id, 'INVOICE');
+  const invoice = await saveDraftInvoice(data, organization!.id, 'INVOICE');
   revalidatePath("/invoices");
   return { id: invoice.id };
 }
@@ -16,7 +16,7 @@ export async function createDraftInvoiceAction(data: any) {
 export async function createDraftCreditNoteAction(data: any) {
   const { organization } = await getTenantSession();
   if (!organization) throw new Error("Unauthorized");
-  const creditNote = await saveDraftInvoice(data, organization.id, 'CREDIT_NOTE');
+  const creditNote = await saveDraftInvoice(data, organization!.id, 'CREDIT_NOTE');
   revalidatePath("/invoices");
   return { id: creditNote.id };
 }
@@ -27,7 +27,7 @@ export async function finalizeInvoiceAction(invoiceId: string) {
   if (!organization) throw new Error("Unauthorized");
 
   try {
-    await finalizeInvoice(invoiceId, organization.id);
+    await finalizeInvoice(invoiceId, organization!.id);
   } catch (err: any) {
     // Return error as a structured object so the client can show it as a toast
     // instead of crashing the page with a Next.js error boundary

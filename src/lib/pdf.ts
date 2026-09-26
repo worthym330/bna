@@ -33,7 +33,7 @@ export async function generatePdfFromHtml(htmlTemplate: string, data: any): Prom
     
     // Set HTML content
     await page.setContent(compiledHtml, {
-      waitUntil: 'networkidle0'
+      waitUntil: 'domcontentloaded'
     });
 
     // Generate PDF

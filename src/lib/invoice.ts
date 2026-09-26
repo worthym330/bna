@@ -92,7 +92,7 @@ export async function finalizeInvoice(invoiceId: string, organizationId: string)
     }
     if (asset) {
       const { getDriveFileAsDataUri } = await import('./drive');
-      return await getDriveFileAsDataUri(asset.driveFileId, asset.mimeType, organizationId);
+      return await getDriveFileAsDataUri(asset.driveFileId, asset.mimeType || '', organizationId);
     }
     return undefined;
   };

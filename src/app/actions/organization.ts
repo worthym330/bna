@@ -16,7 +16,7 @@ export async function updateOrganizationProfile(data: z.infer<typeof orgProfileS
   const parsed = orgProfileSchema.parse(data);
 
   await prisma.organization.update({
-    where: { id: organization.id },
+    where: { id: organization!.id },
     data: {
       legalName: parsed.legalName,
       displayName: parsed.displayName,

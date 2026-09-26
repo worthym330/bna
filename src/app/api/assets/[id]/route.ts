@@ -12,7 +12,7 @@ export async function GET(req: NextRequest, props: { params: Promise<{ id: strin
   }
 
   const asset = await prisma.documentAsset.findUnique({
-    where: { id: params.id, organizationId: organization.id }
+    where: { id: params.id, organizationId: organization!.id }
   });
 
   if (!asset) {
@@ -20,7 +20,7 @@ export async function GET(req: NextRequest, props: { params: Promise<{ id: strin
   }
 
   try {
-    const drive = await getDriveClient(organization.id);
+    const drive = await getDriveClient(organization!.id);
 
     const response = await drive.files.get(
       { fileId: asset.driveFileId, alt: "media" },

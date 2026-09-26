@@ -20,6 +20,6 @@ vi.mock('../src/lib/auth', async (importOriginal) => {
 describe('Tenant Isolation Tests', () => {
   it('should guarantee a user session returns an isolated organizationContext', async () => {
     const session = await getTenantSession();
-    expect(session.organization.id).toBe('org-1');
+    expect(session.organization!.id).toBe('org-1');
   });
 });

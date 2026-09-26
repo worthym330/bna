@@ -9,11 +9,11 @@ export async function createTemplateAction(data: { name: string, htmlContent: st
   if (!organization) throw new Error("Unauthorized");
 
   // If this is the first template, make it default
-  const count = await prisma.invoiceTemplate.count({ where: { organizationId: organization.id }});
+  const count = await prisma.invoiceTemplate.count({ where: { organizationId: organization!.id }});
   
   await prisma.invoiceTemplate.create({
     data: {
-      organizationId: organization.id,
+      organizationId: organization!.id,
       name: data.name,
       htmlContent: data.htmlContent,
       isDefault: count === 0
@@ -29,7 +29,7 @@ export async function updateTemplateAction(id: string, data: { name: string, htm
   if (!organization) throw new Error("Unauthorized");
 
   await prisma.invoiceTemplate.update({
-    where: { id, organizationId: organization.id },
+    where: { id, organizationId: organization!.id },
     data
   });
 
@@ -41,7 +41,7 @@ export async function deleteTemplateAction(id: string) {
   if (!organization) throw new Error("Unauthorized");
 
   await prisma.invoiceTemplate.delete({
-    where: { id, organizationId: organization.id }
+    where: { id, organizationId: organization!.id }
   });
 
   revalidatePath("/settings/templates");
@@ -54,12 +54,12 @@ export async function setAsDefaultTemplateAction(id: string) {
 
   await prisma.$transaction(async (tx) => {
     await tx.invoiceTemplate.updateMany({
-      where: { organizationId: organization.id },
+      where: { organizationId: organization!.id },
       data: { isDefault: false }
     });
     
     await tx.invoiceTemplate.update({
-      where: { id, organizationId: organization.id },
+      where: { id, organizationId: organization!.id },
       data: { isDefault: true }
     });
   });
@@ -89,7 +89,7 @@ export async function compilePreviewAction(config: any) {
   
   if (organization) {
     const dbAssets = await prisma.documentAsset.findMany({
-      where: { organizationId: organization.id }
+      where: { organizationId: organization!.id }
     });
     
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:4321";

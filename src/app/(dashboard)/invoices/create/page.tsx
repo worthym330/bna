@@ -6,22 +6,22 @@ export default async function CreateInvoicePage() {
   const { organization } = await getTenantSession();
 
   const clients = await prisma.client.findMany({
-    where: { organizationId: organization.id, deletedAt: null },
+    where: { organizationId: organization!.id, deletedAt: null },
     orderBy: { clientName: 'asc' }
   });
 
   const projects = await prisma.project.findMany({
-    where: { organizationId: organization.id, deletedAt: null, status: 'ACTIVE' },
+    where: { organizationId: organization!.id, deletedAt: null, status: 'ACTIVE' },
     orderBy: { projectName: 'asc' }
   });
 
   const series = await prisma.invoiceSeries.findMany({
-    where: { organizationId: organization.id, isActive: true },
+    where: { organizationId: organization!.id, isActive: true },
     orderBy: { name: 'asc' }
   });
 
   const templates = await prisma.invoiceTemplate.findMany({
-    where: { organizationId: organization.id },
+    where: { organizationId: organization!.id },
     orderBy: { name: 'asc' }
   });
 

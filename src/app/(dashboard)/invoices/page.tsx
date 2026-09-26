@@ -7,7 +7,7 @@ export default async function InvoicesPage() {
   const { organization } = await getTenantSession();
 
   const invoices = await prisma.invoice.findMany({
-    where: { organizationId: organization.id },
+    where: { organizationId: organization!.id },
     include: { client: true },
     orderBy: { createdAt: 'desc' }
   });

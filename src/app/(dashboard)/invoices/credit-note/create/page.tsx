@@ -8,24 +8,24 @@ export default async function CreateCreditNotePage({ searchParams }: { searchPar
 
   const [clients, projects, series, templates, linkedInvoice] = await Promise.all([
     prisma.client.findMany({
-      where: { organizationId: organization.id, deletedAt: null },
+      where: { organizationId: organization!.id, deletedAt: null },
       orderBy: { clientName: 'asc' }
     }),
     prisma.project.findMany({
-      where: { organizationId: organization.id },
+      where: { organizationId: organization!.id },
       orderBy: { projectName: 'asc' }
     }),
     prisma.invoiceSeries.findMany({
-      where: { organizationId: organization.id, isActive: true },
+      where: { organizationId: organization!.id, isActive: true },
       orderBy: { createdAt: 'desc' }
     }),
     prisma.invoiceTemplate.findMany({
-      where: { organizationId: organization.id },
+      where: { organizationId: organization!.id },
       orderBy: { isDefault: 'desc' }
     }),
     linkedInvoiceId
       ? prisma.invoice.findFirst({
-          where: { id: linkedInvoiceId, organizationId: organization.id, type: 'INVOICE' },
+          where: { id: linkedInvoiceId, organizationId: organization!.id, type: 'INVOICE' },
           include: { client: true, lineItems: true }
         })
       : null,
@@ -33,7 +33,7 @@ export default async function CreateCreditNotePage({ searchParams }: { searchPar
 
   // Also fetch finalized invoices so user can link to one
   const finalizedInvoices = await prisma.invoice.findMany({
-    where: { organizationId: organization.id, type: 'INVOICE', status: 'FINALIZED' },
+    where: { organizationId: organization!.id, type: 'INVOICE', status: 'FINALIZED' },
     include: { client: true },
     orderBy: { createdAt: 'desc' },
     take: 50,
@@ -52,6 +52,7 @@ export default async function CreateCreditNotePage({ searchParams }: { searchPar
         templates={templates}
         finalizedInvoices={finalizedInvoices}
         linkedInvoice={linkedInvoice}
+        organization={organization}
       />
     </div>
   );

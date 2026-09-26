@@ -30,7 +30,7 @@ export async function createInvoiceSeriesAction(formData: FormData) {
 
   await prisma.invoiceSeries.create({
     data: {
-      organizationId: organization.id,
+      organizationId: organization!.id,
       name: parsed.name,
       prefix: parsed.prefix,
       suffix: parsed.suffix,

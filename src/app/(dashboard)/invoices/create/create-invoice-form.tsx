@@ -40,7 +40,7 @@ export function CreateInvoiceForm({ clients, projects, series, templates, organi
   const defaultTemplate = templates?.find((t: any) => t.isDefault);
 
   const { register, control, handleSubmit, watch, formState: { errors } } = useForm<FormData>({
-    resolver: zodResolver(invoiceSchema),
+    resolver: zodResolver(invoiceSchema) as any,
     defaultValues: {
       invoiceDate: new Date().toISOString().split('T')[0],
       templateId: defaultTemplate?.id || "",

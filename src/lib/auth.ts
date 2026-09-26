@@ -69,7 +69,7 @@ export async function getTenantSession() {
   if (!member) {
     if (user.isSuperAdmin) {
       // @ts-ignore - Returning nulls for superadmins who don't need org context
-      return { user, organization: null, role: null, permissions: [] };
+      return { user, organization: null, role: null, permissions: [] as string[] };
     }
     throw new Error("No organization found for this user");
   }

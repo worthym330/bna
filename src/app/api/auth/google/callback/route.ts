@@ -28,14 +28,14 @@ export async function GET(req: NextRequest) {
     }
 
     await prisma.googleCredential.upsert({
-      where: { organizationId: organization.id },
+      where: { organizationId: organization!.id },
       update: {
         accessToken: tokens.access_token,
         refreshToken: tokens.refresh_token,
         expiryDate: new Date(tokens.expiry_date),
       },
       create: {
-        organizationId: organization.id,
+        organizationId: organization!.id,
         accessToken: tokens.access_token,
         refreshToken: tokens.refresh_token,
         expiryDate: new Date(tokens.expiry_date),

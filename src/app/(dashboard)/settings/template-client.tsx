@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { saveTemplateAction } from "@/app/actions/templates";
+import { createTemplateAction, updateTemplateAction } from "@/app/actions/templates";
 
 export function TemplateClient({ existingTemplate }: { existingTemplate: any }) {
   const [htmlContent, setHtmlContent] = useState(existingTemplate?.htmlContent || "");
@@ -12,7 +12,11 @@ export function TemplateClient({ existingTemplate }: { existingTemplate: any }) 
   async function handleSave() {
     setLoading(true);
     try {
-      await saveTemplateAction(htmlContent);
+      if (existingTemplate?.id) {
+        await updateTemplateAction(existingTemplate.id, { name: existingTemplate.name, htmlContent });
+      } else {
+        await createTemplateAction({ name: "Default Template", htmlContent });
+      }
       toast.success("Template saved successfully!");
     } catch (err) {
       console.error(err);

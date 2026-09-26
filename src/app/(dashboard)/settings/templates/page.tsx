@@ -6,12 +6,12 @@ export default async function TemplatesPage() {
   const { organization } = await getTenantSession();
 
   const templates = await prisma.invoiceTemplate.findMany({
-    where: { organizationId: organization.id },
+    where: { organizationId: organization!.id },
     orderBy: { createdAt: 'desc' }
   });
 
   const assets = await prisma.documentAsset.findMany({
-    where: { organizationId: organization.id }
+    where: { organizationId: organization!.id }
   });
 
   return (
