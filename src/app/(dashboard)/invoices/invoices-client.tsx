@@ -55,11 +55,10 @@ const columns: ColumnDef<InvoiceData>[] = [
     cell: ({ row }) => {
       const status = row.getValue("status") as string;
       return (
-        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-          status === 'FINALIZED' ? 'bg-green-100 text-green-800' :
-          status === 'CANCELLED' ? 'bg-slate-100 text-slate-600' :
-          'bg-amber-100 text-amber-800'
-        }`}>
+        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${status === 'FINALIZED' ? 'bg-green-100 text-green-800' :
+            status === 'CANCELLED' ? 'bg-slate-100 text-slate-600' :
+              'bg-amber-100 text-amber-800'
+          }`}>
           {status}
         </span>
       );
@@ -109,10 +108,10 @@ export function InvoicesClient({ invoices, canManage }: { invoices: InvoiceData[
   };
 
   return (
-    <DataTable 
-      columns={columns} 
-      data={invoices} 
-      searchKey="clientName" 
+    <DataTable
+      columns={columns}
+      data={invoices}
+      searchKey="clientName"
       onExport={handleExport}
     />
   );

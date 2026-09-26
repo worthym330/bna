@@ -5,11 +5,8 @@ export default function LoginPage() {
   return (
     <div className="flex h-screen w-screen items-center justify-center bg-slate-50">
       <Card className="w-[400px]">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
-          <CardDescription>Sign in to your BNA Billing account</CardDescription>
-        </CardHeader>
-        <CardContent>
+
+        <CardContent className="pt-6">
           <LoginForm />
         </CardContent>
       </Card>

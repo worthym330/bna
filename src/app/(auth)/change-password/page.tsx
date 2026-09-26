@@ -10,7 +10,7 @@ export default async function ChangePasswordPage() {
   
   // If the user somehow gets here but doesn't need a password change, send them away.
   if (!user.needsPasswordChange) {
-    redirect("/");
+    redirect("/dashboard");
   }
 
   return <ChangePasswordClient />;

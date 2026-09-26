@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { requestPasswordResetAction } from "@/app/actions/auth";
+import Link from "next/link";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -67,9 +68,9 @@ export default function ForgotPasswordPage() {
             {loading ? "Sending link..." : "Send Reset Link"}
           </Button>
           <div className="text-center text-sm">
-            <a href="/login" className="text-blue-500 hover:underline">
+            <Link href="/login" className="text-blue-500 hover:underline">
               Back to login
-            </a>
+            </Link>
           </div>
         </form>
       </div>

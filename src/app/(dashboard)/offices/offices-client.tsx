@@ -64,10 +64,10 @@ export function OfficesClient({ offices, canManage = true }: { offices: OfficeDa
   };
 
   return (
-    <DataTable 
-      columns={columns} 
-      data={offices} 
-      searchKey="siteName" 
+    <DataTable
+      columns={columns}
+      data={offices}
+      searchKey="siteName"
       onExport={handleExport}
     />
   );

@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { loginAction } from "@/app/actions/auth";
 import { loginSchema } from "@/lib/validations";
 import { Eye, EyeOff } from "lucide-react";
+import Link from "next/link";
 
 export function LoginForm() {
   const [globalError, setGlobalError] = useState<string | null>(null);
@@ -74,7 +75,7 @@ export function LoginForm() {
               <FormItem>
                 <div className="flex items-center justify-between">
                   <FormLabel>Password</FormLabel>
-                  <a href="/forgot-password" className="text-sm text-blue-500 hover:underline">Forgot password?</a>
+                  <Link href="/forgot-password" className="text-sm text-blue-500 hover:underline">Forgot password?</Link>
                 </div>
                 <FormControl>
                   <div className="relative">
@@ -95,6 +96,17 @@ export function LoginForm() {
           <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
             {form.formState.isSubmitting ? "Signing in..." : "Sign In"}
           </Button>
+
+          <div className="text-center text-sm">
+            Don't have an account?{" "}
+            <a 
+              href="/register" 
+              onClick={(e) => { e.preventDefault(); window.location.href = '/register'; }}
+              className="text-blue-500 hover:underline cursor-pointer"
+            >
+              Register your organization
+            </a>
+          </div>
         </form>
       </Form>
     </div>

@@ -64,10 +64,10 @@ export function ClientsClient({ clients, canManage = true }: { clients: ClientDa
   };
 
   return (
-    <DataTable 
-      columns={columns} 
-      data={clients} 
-      searchKey="clientName" 
+    <DataTable
+      columns={columns}
+      data={clients}
+      searchKey="clientName"
       onExport={handleExport}
     />
   );

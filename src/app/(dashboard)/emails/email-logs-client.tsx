@@ -28,15 +28,15 @@ export function EmailLogsClient({
   logs: EmailLog[];
   inbox?: any[];
 }) {
-  const [tab, setTab] = useState<'inbox'|'important'|'sent'>('inbox');
-  const [filter, setFilter] = useState<'all'|'unread'|'read'>('all');
+  const [tab, setTab] = useState<'inbox' | 'important' | 'sent'>('inbox');
+  const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
   const [openMsg, setOpenMsg] = useState(false);
   const [selectedMsg, setSelectedMsg] = useState<any>(null);
   const [fullBody, setFullBody] = useState<string | null>(null);
   const [msgAttachments, setMsgAttachments] = useState<any[]>([]);
   const [msgLoading, setMsgLoading] = useState(false);
   const [isComposing, setIsComposing] = useState(false);
-  
+
   // Pagination & selection
   const [emails, setEmails] = useState<any[]>(inbox);
   const [nextPageToken, setNextPageToken] = useState<string | null>(null);
@@ -72,11 +72,11 @@ export function EmailLogsClient({
     setLoadingMore(false);
   };
 
-  const handleBulkAction = async (action: 'read'|'unread'|'important'|'unimportant'|'delete') => {
+  const handleBulkAction = async (action: 'read' | 'unread' | 'important' | 'unimportant' | 'delete') => {
     if (selectedIds.length === 0) return;
     const ids = [...selectedIds];
     setSelectedIds([]); // Optimistic clear
-    
+
     try {
       if (action === 'delete') {
         setEmails(prev => prev.filter(e => !ids.includes(e.id)));
@@ -129,22 +129,22 @@ export function EmailLogsClient({
         {/* Left Column - List */}
         <div className="w-1/3 flex flex-col border-r pr-6 shrink-0">
           <div className="flex gap-2 border-b mb-4 shrink-0">
-            <Button 
-              variant={tab === 'inbox' ? 'secondary' : 'ghost'} 
+            <Button
+              variant={tab === 'inbox' ? 'secondary' : 'ghost'}
               onClick={() => { setTab('inbox'); setSelectedMsg(null); setFullBody(null); }}
               className="rounded-b-none"
             >
               Inbox
             </Button>
-            <Button 
-              variant={tab === 'important' ? 'secondary' : 'ghost'} 
+            <Button
+              variant={tab === 'important' ? 'secondary' : 'ghost'}
               onClick={() => { setTab('important'); setSelectedMsg(null); setFullBody(null); }}
               className="rounded-b-none"
             >
               Important
             </Button>
-            <Button 
-              variant={tab === 'sent' ? 'secondary' : 'ghost'} 
+            <Button
+              variant={tab === 'sent' ? 'secondary' : 'ghost'}
               onClick={() => { setTab('sent'); setSelectedMsg(null); setFullBody(null); }}
               className="rounded-b-none"
             >
@@ -154,14 +154,14 @@ export function EmailLogsClient({
 
           {(tab === 'inbox' || tab === 'important') && (
             <div className="flex items-center gap-3 mb-4 p-2 bg-muted/40 rounded-lg shrink-0">
-              <Checkbox 
-                checked={selectedIds.length > 0 && selectedIds.length === emails.length} 
+              <Checkbox
+                checked={selectedIds.length > 0 && selectedIds.length === emails.length}
                 onCheckedChange={toggleSelectAll}
                 className="ml-1"
               />
-              <select 
-                value={filter} 
-                onChange={e => setFilter(e.target.value as any)} 
+              <select
+                value={filter}
+                onChange={e => setFilter(e.target.value as any)}
                 className="text-xs bg-transparent border-none focus:ring-0 cursor-pointer font-medium"
               >
                 <option value="all">All</option>
@@ -171,11 +171,11 @@ export function EmailLogsClient({
 
               {selectedIds.length > 0 && (
                 <div className="flex items-center gap-1 ml-auto">
-                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleBulkAction('read')} title="Mark Read"><MailOpen className="w-3.5 h-3.5"/></Button>
-                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleBulkAction('unread')} title="Mark Unread"><Mail className="w-3.5 h-3.5"/></Button>
-                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleBulkAction('important')} title="Mark Important"><Star className="w-3.5 h-3.5"/></Button>
-                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleBulkAction('unimportant')} title="Remove Important"><StarOff className="w-3.5 h-3.5"/></Button>
-                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleBulkAction('delete')} title="Delete"><Trash className="w-3.5 h-3.5 text-red-500"/></Button>
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleBulkAction('read')} title="Mark Read"><MailOpen className="w-3.5 h-3.5" /></Button>
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleBulkAction('unread')} title="Mark Unread"><Mail className="w-3.5 h-3.5" /></Button>
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleBulkAction('important')} title="Mark Important"><Star className="w-3.5 h-3.5" /></Button>
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleBulkAction('unimportant')} title="Remove Important"><StarOff className="w-3.5 h-3.5" /></Button>
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleBulkAction('delete')} title="Delete"><Trash className="w-3.5 h-3.5 text-red-500" /></Button>
                 </div>
               )}
             </div>
@@ -195,8 +195,8 @@ export function EmailLogsClient({
                 ) : (
                   <>
                     {emails.map((msg: any) => (
-                      <Card 
-                        key={msg.id} 
+                      <Card
+                        key={msg.id}
                         className={`cursor-pointer transition-colors relative ${selectedMsg?.id === msg.id ? 'border-primary ring-1 ring-primary/20 bg-muted/50' : 'hover:bg-muted/30'} ${msg.isUnread ? 'bg-blue-50/50 dark:bg-blue-900/10' : ''}`}
                         onClick={async () => {
                           setIsComposing(false);
@@ -227,7 +227,7 @@ export function EmailLogsClient({
                         <CardHeader className="py-3 px-4">
                           <div className="flex gap-3">
                             <div className="pt-1 shrink-0" onClick={e => e.stopPropagation()}>
-                              <Checkbox 
+                              <Checkbox
                                 checked={selectedIds.includes(msg.id)}
                                 onCheckedChange={(c) => {
                                   if (c) setSelectedIds(prev => [...prev, msg.id]);
@@ -272,8 +272,8 @@ export function EmailLogsClient({
                   </Card>
                 ) : (
                   logs.map((log) => (
-                    <Card 
-                      key={log.id} 
+                    <Card
+                      key={log.id}
                       className={`cursor-pointer transition-colors ${selectedMsg?.id === log.id ? 'border-primary ring-1 ring-primary/20 bg-muted/50' : 'hover:bg-muted/30'}`}
                       onClick={() => {
                         setIsComposing(false);
@@ -314,10 +314,10 @@ export function EmailLogsClient({
         {/* Right Column - Email Reader / Composer */}
         <div className="w-2/3 flex flex-col pl-2 overflow-y-auto bg-card rounded-lg border shadow-sm relative">
           {isComposing ? (
-            <SendEmailForm 
-              organizationId={organizationId} 
-              onCancel={() => setIsComposing(false)} 
-              onSuccess={() => setIsComposing(false)} 
+            <SendEmailForm
+              organizationId={organizationId}
+              onCancel={() => setIsComposing(false)}
+              onSuccess={() => setIsComposing(false)}
             />
           ) : selectedMsg ? (
             <div className="p-6">
@@ -348,15 +348,15 @@ export function EmailLogsClient({
                     </div>
                   </div>
                 ) : (
-                   <div dangerouslySetInnerHTML={{ __html: fullBody || '' }} className="prose prose-sm dark:prose-invert max-w-none" />
+                  <div dangerouslySetInnerHTML={{ __html: fullBody || '' }} className="prose prose-sm dark:prose-invert max-w-none" />
                 )}
                 {!msgLoading && msgAttachments.length > 0 && (
                   <div className="mt-8 pt-4 border-t">
                     <h4 className="text-sm font-semibold mb-3">Attachments</h4>
                     <div className="flex flex-wrap gap-2">
                       {msgAttachments.map((att, i) => (
-                        <button 
-                          key={i} 
+                        <button
+                          key={i}
                           onClick={async () => {
                             try {
                               const { getAttachmentAction } = await import('@/app/actions/email');
@@ -390,7 +390,7 @@ export function EmailLogsClient({
           ) : (
             <div className="flex h-full items-center justify-center text-muted-foreground flex-col gap-4">
               <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-                <Mail className="w-8 h-8 opacity-50"/>
+                <Mail className="w-8 h-8 opacity-50" />
               </div>
               <p>Select an email to read</p>
             </div>

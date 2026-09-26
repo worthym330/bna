@@ -72,3 +72,11 @@ export const projectSchema = z.object({
   clientId: z.string().min(1, "Client is required"),
   status: z.string().min(1, "Status is required"),
 });
+
+export const registerSchema = z.object({
+  legalName: z.string().min(1, "Organization legal name is required"),
+  displayName: z.string().min(1, "Organization display name is required"),
+  name: z.string().min(1, "Your name is required"),
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});

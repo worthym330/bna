@@ -1,4 +1,4 @@
-import { getTenantSession, requirePermission } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { InvoiceForm } from "@/components/forms/InvoiceForm";
 

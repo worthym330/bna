@@ -10,7 +10,7 @@ export default async function SuperAdminDashboard() {
   const { user } = await getTenantSession();
 
   if (!user.isSuperAdmin) {
-    redirect("/");
+    redirect("/dashboard");
   }
 
   const [organizations, permissions, allUsers, googleCredential] = await Promise.all([

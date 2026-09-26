@@ -57,7 +57,7 @@ export function InvoiceDetailClient({ invoice, canManage = true }: { invoice: an
   return (
     <div className="space-y-6">
       <div className="bg-white p-6 rounded-md border shadow-sm space-y-6">
-        
+
         <div className="flex justify-between border-b pb-4">
           <div>
             <h3 className="text-sm font-medium text-slate-500">Bill To</h3>

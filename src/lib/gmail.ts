@@ -134,7 +134,7 @@ export async function sendEmail(
     `Content-Type: multipart/mixed; boundary="${boundary}"`,
     '',
     `--${boundary}`,
-    'Content-Type: text/plain; charset=utf-8',
+    'Content-Type: text/html; charset=utf-8',
     '',
     finalBody,
     '',
@@ -185,46 +185,74 @@ export async function sendEmail(
   return res.data;
 }
 
-export async function sendSystemEmail(
-  userId: string, 
-  to: string, 
-  subject: string, 
-  textBody: string
-) {
-  const gmail = await getSystemGmailClient(userId);
+import nodemailer from 'nodemailer';
 
-  const utf8Subject = `=?utf-8?B?${Buffer.from(subject).toString('base64')}?=`;
-  const boundary = 'bna_boundary_' + Date.now().toString(16);
-  
-  const messageParts = [
-    `To: ${to}`,
-    `Subject: ${utf8Subject}`,
-    'MIME-Version: 1.0',
-    `Content-Type: multipart/mixed; boundary="${boundary}"`,
-    '',
-    `--${boundary}`,
-    'Content-Type: text/plain; charset=utf-8',
-    '',
-    textBody,
-    '',
-    `--${boundary}--`, 
-    ''
-  ];
-
-  const message = messageParts.join('\n');
-  
-  const encodedMessage = Buffer.from(message)
-    .toString('base64')
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/, '');
-
-  const res = await gmail.users.messages.send({
-    userId: 'me',
-    requestBody: { raw: encodedMessage },
+async function sendSystemEmailFallback(to: string, subject: string, htmlBody: string) {
+  const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST || 'smtp.gmail.com',
+    port: parseInt(process.env.SMTP_PORT || '587'),
+    secure: process.env.SMTP_SECURE === 'true',
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
   });
 
-  return res.data;
+  return await transporter.sendMail({
+    from: process.env.SMTP_FROM || '"BNA System" <noreply@bna.com>',
+    to,
+    subject,
+    html: htmlBody,
+    text: htmlBody.replace(/<[^>]*>?/gm, ''),
+  });
+}
+
+export async function sendSystemEmail(
+  userId: string | null, 
+  to: string, 
+  subject: string, 
+  htmlBody: string
+) {
+  try {
+    if (!userId) throw new Error("No userId provided for Gmail API");
+    const gmail = await getSystemGmailClient(userId);
+
+    const utf8Subject = `=?utf-8?B?${Buffer.from(subject).toString('base64')}?=`;
+    const boundary = 'bna_boundary_' + Date.now().toString(16);
+    
+    const messageParts = [
+      `To: ${to}`,
+      `Subject: ${utf8Subject}`,
+      'MIME-Version: 1.0',
+      `Content-Type: multipart/mixed; boundary="${boundary}"`,
+      '',
+      `--${boundary}`,
+      'Content-Type: text/html; charset=utf-8',
+      '',
+      htmlBody,
+      '',
+      `--${boundary}--`, 
+      ''
+    ];
+
+    const message = messageParts.join('\n');
+    
+    const encodedMessage = Buffer.from(message)
+      .toString('base64')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
+
+    const res = await gmail.users.messages.send({
+      userId: 'me',
+      requestBody: { raw: encodedMessage },
+    });
+
+    return res.data;
+  } catch (error) {
+    console.warn("Gmail API unavailable or failed, attempting SMTP fallback...", error);
+    return await sendSystemEmailFallback(to, subject, htmlBody);
+  }
 }
 export async function getRecentEmails(
   organizationId: string, 
