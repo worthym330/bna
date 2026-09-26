@@ -1,14 +1,14 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getTenantSession } from "@/lib/auth";
+import { getTenantSession, requirePermission } from "@/lib/auth";
 import { saveDraftInvoice, updateDraftInvoice, finalizeInvoice } from "@/lib/invoice";
 import { saveDraftCreditNote, updateDraftCreditNote, finalizeCreditNote } from "@/lib/credit-note";
 import { redirect } from "next/navigation";
 import { logAudit } from "@/lib/audit";
 
 export async function createDraftInvoiceAction(data: any) {
-  const { organization } = await getTenantSession();
+  const { organization } = await requirePermission("invoices.manage");
   if (!organization) throw new Error("Unauthorized");
   const invoice = await saveDraftInvoice(data, organization!.id);
   await logAudit("CREATE_DRAFT", "Invoice", invoice.id, null, null);
@@ -17,7 +17,7 @@ export async function createDraftInvoiceAction(data: any) {
 }
 
 export async function createDraftCreditNoteAction(data: any) {
-  const { organization } = await getTenantSession();
+  const { organization } = await requirePermission("invoices.manage");
   if (!organization) throw new Error("Unauthorized");
   const creditNote = await saveDraftCreditNote(data, organization!.id);
   await logAudit("CREATE_DRAFT", "CreditNote", creditNote.id, null, null);
@@ -26,7 +26,7 @@ export async function createDraftCreditNoteAction(data: any) {
 }
 
 export async function updateDraftInvoiceAction(invoiceId: string, data: any) {
-  const { organization } = await getTenantSession();
+  const { organization } = await requirePermission("invoices.manage");
   if (!organization) throw new Error("Unauthorized");
   await updateDraftInvoice(invoiceId, data, organization!.id);
   await logAudit("UPDATE_DRAFT", "Invoice", invoiceId, null, null);
@@ -36,7 +36,7 @@ export async function updateDraftInvoiceAction(invoiceId: string, data: any) {
 }
 
 export async function finalizeInvoiceAction(invoiceId: string) {
-  const { organization } = await getTenantSession();
+  const { organization } = await requirePermission("invoices.manage");
   
   if (!organization) throw new Error("Unauthorized");
 
@@ -55,7 +55,7 @@ export async function finalizeInvoiceAction(invoiceId: string) {
 }
 
 export async function updateDraftCreditNoteAction(creditNoteId: string, data: any) {
-  const { organization } = await getTenantSession();
+  const { organization } = await requirePermission("invoices.manage");
   if (!organization) throw new Error("Unauthorized");
   await updateDraftCreditNote(creditNoteId, data, organization!.id);
   await logAudit("UPDATE_DRAFT", "CreditNote", creditNoteId, null, null);
@@ -65,7 +65,7 @@ export async function updateDraftCreditNoteAction(creditNoteId: string, data: an
 }
 
 export async function finalizeCreditNoteAction(creditNoteId: string) {
-  const { organization } = await getTenantSession();
+  const { organization } = await requirePermission("invoices.manage");
   
   if (!organization) throw new Error("Unauthorized");
 
@@ -82,7 +82,7 @@ export async function finalizeCreditNoteAction(creditNoteId: string) {
 }
 
 export async function deleteDraftInvoiceAction(invoiceId: string) {
-  const { organization } = await getTenantSession();
+  const { organization } = await requirePermission("invoices.manage");
   if (!organization) throw new Error("Unauthorized");
 
   const prisma = (await import("@/lib/prisma")).default;
@@ -97,7 +97,7 @@ export async function deleteDraftInvoiceAction(invoiceId: string) {
 }
 
 export async function cancelInvoiceAction(invoiceId: string) {
-  const { organization } = await getTenantSession();
+  const { organization } = await requirePermission("invoices.manage");
   if (!organization) throw new Error("Unauthorized");
 
   const prisma = (await import("@/lib/prisma")).default;
@@ -111,7 +111,7 @@ export async function cancelInvoiceAction(invoiceId: string) {
 }
 
 export async function deleteDraftCreditNoteAction(creditNoteId: string) {
-  const { organization } = await getTenantSession();
+  const { organization } = await requirePermission("invoices.manage");
   if (!organization) throw new Error("Unauthorized");
 
   const prisma = (await import("@/lib/prisma")).default;
@@ -126,7 +126,7 @@ export async function deleteDraftCreditNoteAction(creditNoteId: string) {
 }
 
 export async function cancelCreditNoteAction(creditNoteId: string) {
-  const { organization } = await getTenantSession();
+  const { organization } = await requirePermission("invoices.manage");
   if (!organization) throw new Error("Unauthorized");
 
   const prisma = (await import("@/lib/prisma")).default;

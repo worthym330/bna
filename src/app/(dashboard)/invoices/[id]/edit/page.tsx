@@ -1,10 +1,10 @@
 import prisma from "@/lib/prisma";
-import { getTenantSession } from "@/lib/auth";
+import { getTenantSession, requirePermission } from "@/lib/auth";
 import { notFound, redirect } from "next/navigation";
 import { InvoiceForm } from "@/components/forms/InvoiceForm";
 
 export default async function EditInvoicePage({ params }: { params: Promise<{ id: string }> }) {
-  const { organization } = await getTenantSession();
+  const { organization } = await requirePermission("invoices.manage");
   const { id } = await params;
 
   if (!organization) return redirect("/login");

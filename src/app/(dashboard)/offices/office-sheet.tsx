@@ -31,7 +31,7 @@ type Office = {
 
 const inputCls = "h-11 bg-white border-slate-200 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 transition-all rounded-lg text-sm placeholder:text-slate-400";
 
-export function OfficeSheet({ office }: { office?: Office }) {
+export function OfficeSheet({ office, canManage = true }: { office?: Office, canManage?: boolean }) {
   const [open, setOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const isEditing = !!office;
@@ -79,11 +79,17 @@ export function OfficeSheet({ office }: { office?: Office }) {
     }
   }
 
+  if (!isEditing && !canManage) return null;
+
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger render={isEditing ? <Button variant="ghost" size="sm" /> : <Button />}>
-        {isEditing ? "Edit" : "Add Office"}
-      </SheetTrigger>
+      <SheetTrigger render={
+        isEditing ? (
+          <Button variant="ghost" size="sm" onClick={() => setOpen(true)}>Edit</Button>
+        ) : (
+          <Button onClick={() => setOpen(true)}>Add Office</Button>
+        )
+      } />
 
       <SheetContent className="p-0 overflow-y-auto sm:max-w-md flex flex-col">
         {/* ── Prominent Header ── */}
@@ -114,7 +120,7 @@ export function OfficeSheet({ office }: { office?: Office }) {
                     <FormField control={form.control} name="siteName" render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Site Name *</FormLabel>
-                        <FormControl><Input {...field} className={inputCls} placeholder="Headquarters" /></FormControl>
+                        <FormControl><Input {...field} className={inputCls} placeholder="Headquarters" disabled={!canManage} /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />
@@ -132,7 +138,7 @@ export function OfficeSheet({ office }: { office?: Office }) {
                     <FormField control={form.control} name="gstin" render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs font-semibold text-slate-500 uppercase tracking-wide">GSTIN</FormLabel>
-                        <FormControl><Input {...field} value={field.value || ""} className={inputCls} placeholder="22AAAAA0000A1Z5" /></FormControl>
+                        <FormControl><Input {...field} value={field.value || ""} className={inputCls} placeholder="22AAAAA0000A1Z5" disabled={!canManage} /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />
@@ -148,7 +154,7 @@ export function OfficeSheet({ office }: { office?: Office }) {
                     <FormField control={form.control} name="addressLine1" render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Address Line 1 *</FormLabel>
-                        <FormControl><Input {...field} className={inputCls} placeholder="123 Business Avenue" /></FormControl>
+                        <FormControl><Input {...field} className={inputCls} placeholder="123 Business Avenue" disabled={!canManage} /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />
@@ -157,7 +163,7 @@ export function OfficeSheet({ office }: { office?: Office }) {
                     <FormField control={form.control} name="addressLine2" render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Address Line 2</FormLabel>
-                        <FormControl><Input {...field} value={field.value || ""} className={inputCls} placeholder="Suite 400" /></FormControl>
+                        <FormControl><Input {...field} value={field.value || ""} className={inputCls} placeholder="Suite 400" disabled={!canManage} /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />
@@ -167,7 +173,7 @@ export function OfficeSheet({ office }: { office?: Office }) {
                       <FormField control={form.control} name="city" render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-xs font-semibold text-slate-500 uppercase tracking-wide">City *</FormLabel>
-                          <FormControl><Input {...field} className={inputCls} placeholder="Mumbai" /></FormControl>
+                          <FormControl><Input {...field} className={inputCls} placeholder="Mumbai" disabled={!canManage} /></FormControl>
                           <FormMessage />
                         </FormItem>
                       )} />
@@ -176,7 +182,7 @@ export function OfficeSheet({ office }: { office?: Office }) {
                       <FormField control={form.control} name="state" render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-xs font-semibold text-slate-500 uppercase tracking-wide">State *</FormLabel>
-                          <FormControl><Input {...field} className={inputCls} placeholder="Maharashtra" /></FormControl>
+                          <FormControl><Input {...field} className={inputCls} placeholder="Maharashtra" disabled={!canManage} /></FormControl>
                           <FormMessage />
                         </FormItem>
                       )} />
@@ -187,7 +193,7 @@ export function OfficeSheet({ office }: { office?: Office }) {
                       <FormField control={form.control} name="pincode" render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Pincode</FormLabel>
-                          <FormControl><Input {...field} value={field.value || ""} className={inputCls} placeholder="400001" /></FormControl>
+                          <FormControl><Input {...field} value={field.value || ""} className={inputCls} placeholder="400001" disabled={!canManage} /></FormControl>
                           <FormMessage />
                         </FormItem>
                       )} />
@@ -196,7 +202,7 @@ export function OfficeSheet({ office }: { office?: Office }) {
                       <FormField control={form.control} name="country" render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Country *</FormLabel>
-                          <FormControl><Input {...field} className={inputCls} placeholder="India" /></FormControl>
+                          <FormControl><Input {...field} className={inputCls} placeholder="India" disabled={!canManage} /></FormControl>
                           <FormMessage />
                         </FormItem>
                       )} />
@@ -242,20 +248,22 @@ export function OfficeSheet({ office }: { office?: Office }) {
               </div>
 
               {/* Actions */}
-              <div className="flex items-center gap-3 pt-2">
-                <Button
-                  type="submit"
-                  disabled={form.formState.isSubmitting}
-                  className={`flex-1 h-11 font-semibold rounded-lg ${isEditing ? "bg-slate-800 hover:bg-slate-900" : "bg-cyan-600 hover:bg-cyan-700"}`}
-                >
-                  {form.formState.isSubmitting ? "Saving..." : isEditing ? "Save Changes" : "Create Office"}
-                </Button>
-                {isEditing && (
-                  <Button type="button" variant="outline" className="h-11 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 rounded-lg" onClick={() => setConfirmOpen(true)} disabled={form.formState.isSubmitting}>
-                    Delete
+              {canManage && (
+                <div className="flex items-center gap-3 pt-2">
+                  <Button
+                    type="submit"
+                    disabled={form.formState.isSubmitting}
+                    className={`flex-1 h-11 font-semibold rounded-lg ${isEditing ? "bg-slate-800 hover:bg-slate-900" : "bg-cyan-600 hover:bg-cyan-700"}`}
+                  >
+                    {form.formState.isSubmitting ? "Saving..." : isEditing ? "Save Changes" : "Create Office"}
                   </Button>
-                )}
-              </div>
+                  {isEditing && (
+                    <Button type="button" variant="outline" className="h-11 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 rounded-lg" onClick={() => setConfirmOpen(true)} disabled={form.formState.isSubmitting}>
+                      Delete
+                    </Button>
+                  )}
+                </div>
+              )}
             </form>
           </Form>
         </div>

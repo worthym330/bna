@@ -1,12 +1,12 @@
 "use server";
 import prisma from "@/lib/prisma";
-import { getTenantSession } from "@/lib/auth";
+import { getTenantSession, requirePermission } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { officeSchema } from "@/lib/validations";
 import * as z from "zod";
 
 export async function getOffices() {
-  const { organization } = await getTenantSession();
+  const { organization } = await requirePermission("offices.view");
   return prisma.office.findMany({
     where: { organizationId: organization!.id, deletedAt: null },
     orderBy: { siteName: "asc" },
@@ -14,7 +14,7 @@ export async function getOffices() {
 }
 
 export async function createOffice(data: z.infer<typeof officeSchema>) {
-  const { organization } = await getTenantSession();
+  const { organization } = await requirePermission("offices.manage");
   const parsed = officeSchema.parse(data);
   const office = await prisma.office.create({
     data: {
@@ -27,7 +27,7 @@ export async function createOffice(data: z.infer<typeof officeSchema>) {
 }
 
 export async function updateOffice(id: string, data: z.infer<typeof officeSchema>) {
-  const { organization } = await getTenantSession();
+  const { organization } = await requirePermission("offices.manage");
   
   const existingOffice = await prisma.office.findUnique({ where: { id } });
   if (!existingOffice || existingOffice.organizationId !== organization!.id) {
@@ -45,7 +45,7 @@ export async function updateOffice(id: string, data: z.infer<typeof officeSchema
 }
 
 export async function deleteOffice(id: string) {
-  const { organization } = await getTenantSession();
+  const { organization } = await requirePermission("offices.manage");
   
   const existingOffice = await prisma.office.findUnique({ where: { id } });
   if (!existingOffice || existingOffice.organizationId !== organization!.id) {

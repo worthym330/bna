@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { finalizeInvoiceAction, deleteDraftInvoiceAction, cancelInvoiceAction } from "@/app/actions/invoices";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
-export function InvoiceDetailClient({ invoice }: { invoice: any }) {
+export function InvoiceDetailClient({ invoice, canManage = true }: { invoice: any, canManage?: boolean }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [confirmFinalize, setConfirmFinalize] = useState(false);
@@ -114,7 +114,7 @@ export function InvoiceDetailClient({ invoice }: { invoice: any }) {
 
       <div className="flex flex-wrap gap-3">
         {/* DRAFT actions */}
-        {invoice.status === "DRAFT" && (
+        {invoice.status === "DRAFT" && canManage && (
           <>
             <Button onClick={() => setConfirmFinalize(true)} disabled={loading || !invoice.seriesId}>
               {loading ? "Processing..." : "Finalize & Generate PDF"}
@@ -147,15 +147,19 @@ export function InvoiceDetailClient({ invoice }: { invoice: any }) {
                 Download PDF
               </a>
             )}
-            <a
-              href={`/credit-notes/create?linkedInvoiceId=${invoice.id}`}
-              className="inline-flex items-center justify-center rounded-md text-sm font-medium border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 h-10 px-4 py-2"
-            >
-              Issue Credit Note
-            </a>
-            <Button variant="outline" className="border-orange-200 text-orange-700 hover:bg-orange-50" onClick={() => setConfirmCancel(true)} disabled={loading}>
-              Cancel Invoice
-            </Button>
+            {canManage && (
+              <>
+                <a
+                  href={`/credit-notes/create?linkedInvoiceId=${invoice.id}`}
+                  className="inline-flex items-center justify-center rounded-md text-sm font-medium border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 h-10 px-4 py-2"
+                >
+                  Issue Credit Note
+                </a>
+                <Button variant="outline" className="border-orange-200 text-orange-700 hover:bg-orange-50" onClick={() => setConfirmCancel(true)} disabled={loading}>
+                  Cancel Invoice
+                </Button>
+              </>
+            )}
           </>
         )}
       </div>

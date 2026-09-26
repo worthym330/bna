@@ -14,10 +14,12 @@ import { toast } from "sonner";
 
 export function SettingsClient({
   isDriveConnected,
-  assets
+  assets,
+  canManage = true
 }: {
   isDriveConnected: boolean;
   assets: DocumentAsset[];
+  canManage?: boolean;
 }) {
   const [loading, setLoading] = useState(false);
 
@@ -90,14 +92,18 @@ export function SettingsClient({
                 <span className="inline-flex items-center rounded-full bg-green-50 px-3 py-1 text-sm font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
                   Connected
                 </span>
-                <Button variant="destructive" size="sm" onClick={handleDisconnectDrive} disabled={loading}>
-                  Disconnect
-                </Button>
+                {canManage && (
+                  <Button variant="destructive" size="sm" onClick={handleDisconnectDrive} disabled={loading}>
+                    Disconnect
+                  </Button>
+                )}
               </div>
             ) : (
-              <Button onClick={handleConnectDrive} disabled={loading}>
-                {loading ? "Connecting..." : "Connect Drive"}
-              </Button>
+              canManage && (
+                <Button onClick={handleConnectDrive} disabled={loading}>
+                  {loading ? "Connecting..." : "Connect Drive"}
+                </Button>
+              )
             )}
           </div>
         </div>
@@ -120,21 +126,21 @@ export function SettingsClient({
           <AssetUploadCard
             title="Letterhead"
             type="LETTERHEAD"
-            disabled={!isDriveConnected || loading}
+            disabled={!isDriveConnected || loading || !canManage}
             onUpload={handleFileUpload}
             uploadedAsset={assets.find(a => a.type === "LETTERHEAD")}
           />
           <AssetUploadCard
             title="Authorized Signature"
             type="SIGNATURE"
-            disabled={!isDriveConnected || loading}
+            disabled={!isDriveConnected || loading || !canManage}
             onUpload={handleFileUpload}
             uploadedAsset={assets.find(a => a.type === "SIGNATURE")}
           />
           <AssetUploadCard
             title="Company Stamp"
             type="STAMP"
-            disabled={!isDriveConnected || loading}
+            disabled={!isDriveConnected || loading || !canManage}
             onUpload={handleFileUpload}
             uploadedAsset={assets.find(a => a.type === "STAMP")}
           />

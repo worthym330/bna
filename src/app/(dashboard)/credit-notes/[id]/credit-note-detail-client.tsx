@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { finalizeCreditNoteAction, deleteDraftCreditNoteAction, cancelCreditNoteAction } from "@/app/actions/invoices";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
-export function CreditNoteDetailClient({ creditNote }: { creditNote: any }) {
+export function CreditNoteDetailClient({ creditNote, canManage = true }: { creditNote: any, canManage?: boolean }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -117,7 +117,7 @@ export function CreditNoteDetailClient({ creditNote }: { creditNote: any }) {
 
       <div className="flex flex-wrap gap-3">
         {/* DRAFT actions */}
-        {creditNote.status === "DRAFT" && (
+        {creditNote.status === "DRAFT" && canManage && (
           <>
             <Button onClick={() => setConfirmOpen(true)} disabled={loading || !creditNote.seriesId}>
               {loading ? "Processing..." : "Finalize & Generate PDF"}
@@ -150,9 +150,11 @@ export function CreditNoteDetailClient({ creditNote }: { creditNote: any }) {
                 Download PDF
               </a>
             )}
-            <Button variant="outline" className="border-orange-200 text-orange-700 hover:bg-orange-50" onClick={() => setConfirmCancel(true)} disabled={loading}>
-              Cancel Credit Note
-            </Button>
+            {canManage && (
+              <Button variant="outline" className="border-orange-200 text-orange-700 hover:bg-orange-50" onClick={() => setConfirmCancel(true)} disabled={loading}>
+                Cancel Credit Note
+              </Button>
+            )}
           </>
         )}
       </div>

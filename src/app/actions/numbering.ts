@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import prisma from "@/lib/prisma";
-import { getTenantSession } from "@/lib/auth";
+import { getTenantSession, requirePermission } from "@/lib/auth";
 import * as z from "zod";
 
 const seriesSchema = z.object({
@@ -15,7 +15,7 @@ const seriesSchema = z.object({
 });
 
 export async function createInvoiceSeriesAction(formData: FormData) {
-  const { organization } = await getTenantSession();
+  const { organization } = await requirePermission("settings.manage");
   
   if (!organization) {
     throw new Error("Unauthorized");
@@ -55,7 +55,7 @@ export async function updateInvoiceSeriesAction(id: string, data: {
   padding: number;
   isActive: boolean;
 }) {
-  const { organization } = await getTenantSession();
+  const { organization } = await requirePermission("settings.manage");
   if (!organization) throw new Error("Unauthorized");
 
   await prisma.invoiceSeries.update({
@@ -73,7 +73,7 @@ export async function updateInvoiceSeriesAction(id: string, data: {
 }
 
 export async function deleteInvoiceSeriesAction(id: string) {
-  const { organization } = await getTenantSession();
+  const { organization } = await requirePermission("settings.manage");
   if (!organization) throw new Error("Unauthorized");
 
   // Only allow delete if no invoices have used this series

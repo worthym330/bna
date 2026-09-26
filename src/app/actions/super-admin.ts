@@ -25,19 +25,26 @@ export async function createOrganizationAction(data: {
 export async function createUserAction(data: {
   name: string;
   email: string;
-  password: string;
+  password?: string;
   organizationId: string;
   roleId?: string;
 }) {
-  const { user } = await getTenantSession();
+  const { user, organization } = await getTenantSession();
   if (!user.isSuperAdmin) throw new Error("Unauthorized");
 
   const existing = await prisma.user.findUnique({ where: { email: data.email } });
   if (existing) throw new Error("Email already in use.");
 
-  const hash = await bcrypt.hash(data.password, 10);
+  const generatedPassword = Math.random().toString(36).slice(-10);
+  const hash = await bcrypt.hash(generatedPassword, 10);
+  
   const newUser = await prisma.user.create({
-    data: { email: data.email, name: data.name, passwordHash: hash }
+    data: { 
+      email: data.email, 
+      name: data.name, 
+      passwordHash: hash,
+      needsPasswordChange: true
+    }
   });
 
   await prisma.organizationMember.create({
@@ -47,6 +54,14 @@ export async function createUserAction(data: {
       roleId: data.roleId || null,
     }
   });
+
+  try {
+    const { sendSystemEmail } = await import('@/lib/gmail');
+    const emailBody = `Hello ${data.name},\n\nYour account has been created successfully.\n\nLogin Email: ${data.email}\nTemporary Password: ${generatedPassword}\n\nPlease log in and change your password.\n\nBest,\nSystem Administrator`;
+    await sendSystemEmail(user.id, data.email, "Welcome to Your New Account", emailBody);
+  } catch (e) {
+    console.error("Failed to send welcome email, but user was created:", e);
+  }
 
   revalidatePath("/super-admin");
 }

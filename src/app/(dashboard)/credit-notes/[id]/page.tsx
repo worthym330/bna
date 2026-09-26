@@ -1,4 +1,4 @@
-import { getTenantSession } from "@/lib/auth";
+import { getTenantSession, requirePermission } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { CreditNoteDetailClient } from "./credit-note-detail-client";
@@ -6,7 +6,9 @@ import Link from "next/link";
 
 export default async function CreditNoteDetailPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
-  const { organization } = await getTenantSession();
+  const session = await requirePermission("invoices.view");
+  const { organization } = session;
+  const canManage = session.user.isSuperAdmin || session.permissions.includes("invoices.manage");
 
   const creditNote = await prisma.creditNote.findUnique({
     where: { id: params.id, organizationId: organization!.id },
@@ -67,7 +69,7 @@ export default async function CreditNoteDetailPage(props: { params: Promise<{ id
         </div>
       )}
 
-      <CreditNoteDetailClient creditNote={{ ...creditNote, linkedInvoice }} />
+      <CreditNoteDetailClient creditNote={{ ...creditNote, linkedInvoice }} canManage={canManage} />
     </div>
   );
 }

@@ -7,7 +7,7 @@ import { createInvoiceSeriesAction, updateInvoiceSeriesAction, deleteInvoiceSeri
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
-export function InvoiceSeriesForm({ existingSeries, type = "INVOICE", title = "Numbering Series" }: { existingSeries: any[]; type?: string; title?: string }) {
+export function InvoiceSeriesForm({ existingSeries, type = "INVOICE", title = "Numbering Series", canManage = true }: { existingSeries: any[]; type?: string; title?: string; canManage?: boolean }) {
   const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editData, setEditData] = useState<any>({});
@@ -136,35 +136,37 @@ export function InvoiceSeriesForm({ existingSeries, type = "INVOICE", title = "N
                       <span className="ml-2 text-xs text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">Inactive</span>
                     )}
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs font-mono bg-white px-2 py-1 rounded border">
-                      Next: #{series.currentSequence + 1}
-                    </span>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => {
-                        setEditingId(series.id);
-                        setEditData({
-                          name: series.name,
-                          prefix: series.prefix,
-                          suffix: series.suffix,
-                          padding: series.padding,
-                          isActive: series.isActive,
-                        });
-                      }}
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                      onClick={() => setDeleteConfirmId(series.id)}
-                    >
-                      Delete
-                    </Button>
-                  </div>
+                  {canManage && (
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs font-mono bg-white px-2 py-1 rounded border">
+                        Next: #{series.currentSequence + 1}
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          setEditingId(series.id);
+                          setEditData({
+                            name: series.name,
+                            prefix: series.prefix,
+                            suffix: series.suffix,
+                            padding: series.padding,
+                            isActive: series.isActive,
+                          });
+                        }}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                        onClick={() => setDeleteConfirmId(series.id)}
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -173,34 +175,36 @@ export function InvoiceSeriesForm({ existingSeries, type = "INVOICE", title = "N
       )}
 
       {/* Create new series form */}
-      <form onSubmit={onSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end border-t pt-4">
-        <input type="hidden" name="type" value={type} />
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Series Name</label>
-          <Input name="name" placeholder="e.g., Standard FY25-26" required />
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Prefix</label>
-          <Input name="prefix" placeholder="e.g., INV/" />
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Suffix</label>
-          <Input name="suffix" placeholder="e.g., /BOM" />
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Padding (Zeroes)</label>
-          <Input name="padding" type="number" min={1} max={10} defaultValue={4} required />
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Starts From</label>
-          <Input name="startSequence" type="number" min={1} defaultValue={1} required />
-        </div>
-        <div className="flex justify-end mt-2">
-          <Button type="submit" disabled={loading}>
-            {loading ? "Creating..." : "Create Sequence"}
-          </Button>
-        </div>
-      </form>
+      {canManage && (
+        <form onSubmit={onSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end border-t pt-4">
+          <input type="hidden" name="type" value={type} />
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Series Name</label>
+            <Input name="name" placeholder="e.g., Standard FY25-26" required />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Prefix</label>
+            <Input name="prefix" placeholder="e.g., INV/" />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Suffix</label>
+            <Input name="suffix" placeholder="e.g., /BOM" />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Padding (Zeroes)</label>
+            <Input name="padding" type="number" min={1} max={10} defaultValue={4} required />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Starts From</label>
+            <Input name="startSequence" type="number" min={1} defaultValue={1} required />
+          </div>
+          <div className="flex justify-end mt-2">
+            <Button type="submit" disabled={loading}>
+              {loading ? "Creating..." : "Create Sequence"}
+            </Button>
+          </div>
+        </form>
+      )}
 
       {deleteConfirmId && (
         <ConfirmDialog

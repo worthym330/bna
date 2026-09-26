@@ -1,9 +1,9 @@
-import { getTenantSession } from "@/lib/auth";
+import { getTenantSession, requirePermission } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { InvoiceForm } from "@/components/forms/InvoiceForm";
 
 export default async function CreateInvoicePage() {
-  const { organization } = await getTenantSession();
+  const { organization } = await requirePermission("invoices.manage");
 
   const clients = await prisma.client.findMany({
     where: { organizationId: organization!.id, deletedAt: null },

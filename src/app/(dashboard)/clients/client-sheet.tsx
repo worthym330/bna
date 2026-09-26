@@ -31,7 +31,7 @@ type Client = {
 
 const inputCls = "h-11 bg-white border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all rounded-lg text-sm placeholder:text-slate-400";
 
-export function ClientSheet({ client }: { client?: Client }) {
+export function ClientSheet({ client, canManage = true }: { client?: Client, canManage?: boolean }) {
   const [open, setOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const isEditing = !!client;
@@ -79,11 +79,17 @@ export function ClientSheet({ client }: { client?: Client }) {
     }
   }
 
+  if (!isEditing && !canManage) return null;
+
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger render={isEditing ? <Button variant="ghost" size="sm" /> : <Button />}>
-        {isEditing ? "Edit" : "Add Client"}
-      </SheetTrigger>
+      <SheetTrigger render={
+        isEditing ? (
+          <Button variant="ghost" size="sm" onClick={() => setOpen(true)}>Edit</Button>
+        ) : (
+          <Button onClick={() => setOpen(true)}>Add Client</Button>
+        )
+      } />
 
       <SheetContent className="p-0 overflow-y-auto sm:max-w-md flex flex-col">
         {/* ── Prominent Header ── */}
@@ -114,7 +120,7 @@ export function ClientSheet({ client }: { client?: Client }) {
                     <FormField control={form.control} name="clientName" render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Client Name *</FormLabel>
-                        <FormControl><Input {...field} className={inputCls} placeholder="Acme Corporation" /></FormControl>
+                        <FormControl><Input {...field} className={inputCls} placeholder="Acme Corporation" disabled={!canManage} /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />
@@ -123,7 +129,7 @@ export function ClientSheet({ client }: { client?: Client }) {
                     <FormField control={form.control} name="clientCode" render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Client Code</FormLabel>
-                        <FormControl><Input {...field} value={field.value || ""} className={inputCls} placeholder="ACM-001" /></FormControl>
+                        <FormControl><Input {...field} value={field.value || ""} className={inputCls} placeholder="ACM-001" disabled={!canManage} /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />
@@ -139,7 +145,7 @@ export function ClientSheet({ client }: { client?: Client }) {
                     <FormField control={form.control} name="email" render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Email</FormLabel>
-                        <FormControl><Input type="email" {...field} value={field.value || ""} className={inputCls} placeholder="contact@company.com" /></FormControl>
+                        <FormControl><Input type="email" {...field} value={field.value || ""} className={inputCls} placeholder="contact@company.com" disabled={!canManage} /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />
@@ -148,7 +154,7 @@ export function ClientSheet({ client }: { client?: Client }) {
                     <FormField control={form.control} name="phone" render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Phone</FormLabel>
-                        <FormControl><Input {...field} value={field.value || ""} className={inputCls} placeholder="+91 98765 43210" /></FormControl>
+                        <FormControl><Input {...field} value={field.value || ""} className={inputCls} placeholder="+91 98765 43210" disabled={!canManage} /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />
@@ -164,7 +170,7 @@ export function ClientSheet({ client }: { client?: Client }) {
                     <FormField control={form.control} name="addressLine1" render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Address Line 1 *</FormLabel>
-                        <FormControl><Input {...field} className={inputCls} placeholder="123 Business Avenue" /></FormControl>
+                        <FormControl><Input {...field} className={inputCls} placeholder="123 Business Avenue" disabled={!canManage} /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />
@@ -173,7 +179,7 @@ export function ClientSheet({ client }: { client?: Client }) {
                     <FormField control={form.control} name="addressLine2" render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Address Line 2</FormLabel>
-                        <FormControl><Input {...field} value={field.value || ""} className={inputCls} placeholder="Suite 400" /></FormControl>
+                        <FormControl><Input {...field} value={field.value || ""} className={inputCls} placeholder="Suite 400" disabled={!canManage} /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />
@@ -183,7 +189,7 @@ export function ClientSheet({ client }: { client?: Client }) {
                       <FormField control={form.control} name="city" render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-xs font-semibold text-slate-500 uppercase tracking-wide">City *</FormLabel>
-                          <FormControl><Input {...field} className={inputCls} placeholder="Mumbai" /></FormControl>
+                          <FormControl><Input {...field} className={inputCls} placeholder="Mumbai" disabled={!canManage} /></FormControl>
                           <FormMessage />
                         </FormItem>
                       )} />
@@ -192,7 +198,7 @@ export function ClientSheet({ client }: { client?: Client }) {
                       <FormField control={form.control} name="state" render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-xs font-semibold text-slate-500 uppercase tracking-wide">State *</FormLabel>
-                          <FormControl><Input {...field} className={inputCls} placeholder="Maharashtra" /></FormControl>
+                          <FormControl><Input {...field} className={inputCls} placeholder="Maharashtra" disabled={!canManage} /></FormControl>
                           <FormMessage />
                         </FormItem>
                       )} />
@@ -203,7 +209,7 @@ export function ClientSheet({ client }: { client?: Client }) {
                       <FormField control={form.control} name="pincode" render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Pincode</FormLabel>
-                          <FormControl><Input {...field} value={field.value || ""} className={inputCls} placeholder="400001" /></FormControl>
+                          <FormControl><Input {...field} value={field.value || ""} className={inputCls} placeholder="400001" disabled={!canManage} /></FormControl>
                           <FormMessage />
                         </FormItem>
                       )} />
@@ -212,7 +218,7 @@ export function ClientSheet({ client }: { client?: Client }) {
                       <FormField control={form.control} name="country" render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Country *</FormLabel>
-                          <FormControl><Input {...field} className={inputCls} placeholder="India" /></FormControl>
+                          <FormControl><Input {...field} className={inputCls} placeholder="India" disabled={!canManage} /></FormControl>
                           <FormMessage />
                         </FormItem>
                       )} />
@@ -229,7 +235,7 @@ export function ClientSheet({ client }: { client?: Client }) {
                     <FormField control={form.control} name="gstin" render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs font-semibold text-slate-500 uppercase tracking-wide">GSTIN</FormLabel>
-                        <FormControl><Input {...field} value={field.value || ""} className={inputCls} placeholder="22AAAAA0000A1Z5" /></FormControl>
+                        <FormControl><Input {...field} value={field.value || ""} className={inputCls} placeholder="22AAAAA0000A1Z5" disabled={!canManage} /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />
@@ -238,7 +244,7 @@ export function ClientSheet({ client }: { client?: Client }) {
                     <FormField control={form.control} name="pan" render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs font-semibold text-slate-500 uppercase tracking-wide">PAN</FormLabel>
-                        <FormControl><Input {...field} value={field.value || ""} className={inputCls} placeholder="AAAAA0000A" /></FormControl>
+                        <FormControl><Input {...field} value={field.value || ""} className={inputCls} placeholder="AAAAA0000A" disabled={!canManage} /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />
@@ -247,20 +253,22 @@ export function ClientSheet({ client }: { client?: Client }) {
               </div>
 
               {/* Actions */}
-              <div className="flex items-center gap-3 pt-2">
-                <Button
-                  type="submit"
-                  disabled={form.formState.isSubmitting}
-                  className={`flex-1 h-11 font-semibold rounded-lg ${isEditing ? "bg-slate-800 hover:bg-slate-900" : "bg-indigo-600 hover:bg-indigo-700"}`}
-                >
-                  {form.formState.isSubmitting ? "Saving..." : isEditing ? "Save Changes" : "Create Client"}
-                </Button>
-                {isEditing && (
-                  <Button type="button" variant="outline" className="h-11 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 rounded-lg" onClick={() => setConfirmOpen(true)} disabled={form.formState.isSubmitting}>
-                    Delete
+              {canManage && (
+                <div className="flex items-center gap-3 pt-2">
+                  <Button
+                    type="submit"
+                    disabled={form.formState.isSubmitting}
+                    className={`flex-1 h-11 font-semibold rounded-lg ${isEditing ? "bg-slate-800 hover:bg-slate-900" : "bg-indigo-600 hover:bg-indigo-700"}`}
+                  >
+                    {form.formState.isSubmitting ? "Saving..." : isEditing ? "Save Changes" : "Create Client"}
                   </Button>
-                )}
-              </div>
+                  {isEditing && (
+                    <Button type="button" variant="outline" className="h-11 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 rounded-lg" onClick={() => setConfirmOpen(true)} disabled={form.formState.isSubmitting}>
+                      Delete
+                    </Button>
+                  )}
+                </div>
+              )}
             </form>
           </Form>
         </div>

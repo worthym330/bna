@@ -33,7 +33,7 @@ type Project = {
 const inputCls = "h-11 bg-white border-slate-200 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 transition-all rounded-lg text-sm placeholder:text-slate-400";
 const selectCls = "flex h-11 w-full bg-white border-slate-200 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 transition-all rounded-lg text-sm px-3";
 
-export function ProjectSheet({ project, clients }: { project?: Project; clients: Client[] }) {
+export function ProjectSheet({ project, clients, canManage = true }: { project?: Project; clients: Client[], canManage?: boolean }) {
   const [open, setOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const isEditing = !!project;
@@ -80,11 +80,17 @@ export function ProjectSheet({ project, clients }: { project?: Project; clients:
     }
   }
 
+  if (!isEditing && !canManage) return null;
+
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger render={isEditing ? <Button variant="ghost" size="sm" /> : <Button />}>
-        {isEditing ? "Edit" : "Add Project"}
-      </SheetTrigger>
+      <SheetTrigger render={
+        isEditing ? (
+          <Button variant="ghost" size="sm" onClick={() => setOpen(true)}>Edit</Button>
+        ) : (
+          <Button onClick={() => setOpen(true)}>Add Project</Button>
+        )
+      } />
 
       <SheetContent className="p-0 overflow-y-auto sm:max-w-md flex flex-col">
         {/* ── Prominent Header ── */}
@@ -115,7 +121,7 @@ export function ProjectSheet({ project, clients }: { project?: Project; clients:
                     <FormField control={form.control} name="projectName" render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Project Name *</FormLabel>
-                        <FormControl><Input {...field} className={inputCls} placeholder="Q1 Audit" /></FormControl>
+                        <FormControl><Input {...field} className={inputCls} placeholder="Q1 Audit" disabled={!canManage} /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />
@@ -125,7 +131,7 @@ export function ProjectSheet({ project, clients }: { project?: Project; clients:
                       <FormField control={form.control} name="projectCode" render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Project Code</FormLabel>
-                          <FormControl><Input {...field} value={field.value || ""} className={inputCls} placeholder="PRJ-01" /></FormControl>
+                          <FormControl><Input {...field} value={field.value || ""} className={inputCls} placeholder="PRJ-01" disabled={!canManage} /></FormControl>
                           <FormMessage />
                         </FormItem>
                       )} />
@@ -135,7 +141,7 @@ export function ProjectSheet({ project, clients }: { project?: Project; clients:
                         <FormItem>
                           <FormLabel className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Status</FormLabel>
                           <FormControl>
-                            <select {...field} className={selectCls}>
+                            <select {...field} className={selectCls} disabled={!canManage}>
                               <option value="ACTIVE">Active</option>
                               <option value="COMPLETED">Completed</option>
                               <option value="ON_HOLD">On Hold</option>
@@ -151,7 +157,7 @@ export function ProjectSheet({ project, clients }: { project?: Project; clients:
                       <FormItem>
                         <FormLabel className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Client *</FormLabel>
                         <FormControl>
-                          <select {...field} className={selectCls}>
+                          <select {...field} className={selectCls} disabled={!canManage}>
                             <option value="" disabled>Select a Client</option>
                             {clients.map(c => <option key={c.id} value={c.id}>{c.clientName}</option>)}
                           </select>
@@ -172,7 +178,7 @@ export function ProjectSheet({ project, clients }: { project?: Project; clients:
                       <FormField control={form.control} name="projectStartDate" render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Start Date</FormLabel>
-                          <FormControl><Input type="date" {...field} value={field.value || ""} className={inputCls} /></FormControl>
+                          <FormControl><Input type="date" {...field} value={field.value || ""} className={inputCls} disabled={!canManage} /></FormControl>
                           <FormMessage />
                         </FormItem>
                       )} />
@@ -181,7 +187,7 @@ export function ProjectSheet({ project, clients }: { project?: Project; clients:
                       <FormField control={form.control} name="projectEndDate" render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-xs font-semibold text-slate-500 uppercase tracking-wide">End Date</FormLabel>
-                          <FormControl><Input type="date" {...field} value={field.value || ""} className={inputCls} /></FormControl>
+                          <FormControl><Input type="date" {...field} value={field.value || ""} className={inputCls} disabled={!canManage} /></FormControl>
                           <FormMessage />
                         </FormItem>
                       )} />
@@ -199,7 +205,7 @@ export function ProjectSheet({ project, clients }: { project?: Project; clients:
                       <FormField control={form.control} name="workOrderNumber" render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-xs font-semibold text-slate-500 uppercase tracking-wide">WO Number</FormLabel>
-                          <FormControl><Input {...field} value={field.value || ""} className={inputCls} placeholder="WO-1234" /></FormControl>
+                          <FormControl><Input {...field} value={field.value || ""} className={inputCls} placeholder="WO-1234" disabled={!canManage} /></FormControl>
                           <FormMessage />
                         </FormItem>
                       )} />
@@ -208,7 +214,7 @@ export function ProjectSheet({ project, clients }: { project?: Project; clients:
                       <FormField control={form.control} name="workOrderDate" render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-xs font-semibold text-slate-500 uppercase tracking-wide">WO Date</FormLabel>
-                          <FormControl><Input type="date" {...field} value={field.value || ""} className={inputCls} /></FormControl>
+                          <FormControl><Input type="date" {...field} value={field.value || ""} className={inputCls} disabled={!canManage} /></FormControl>
                           <FormMessage />
                         </FormItem>
                       )} />
@@ -218,7 +224,7 @@ export function ProjectSheet({ project, clients }: { project?: Project; clients:
                     <FormField control={form.control} name="sacCategory" render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs font-semibold text-slate-500 uppercase tracking-wide">SAC Category</FormLabel>
-                        <FormControl><Input {...field} value={field.value || ""} className={inputCls} placeholder="998231" /></FormControl>
+                        <FormControl><Input {...field} value={field.value || ""} className={inputCls} placeholder="998231" disabled={!canManage} /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />
@@ -227,7 +233,7 @@ export function ProjectSheet({ project, clients }: { project?: Project; clients:
                     <FormField control={form.control} name="description" render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Description</FormLabel>
-                        <FormControl><Input {...field} value={field.value || ""} className={inputCls} placeholder="Brief project description" /></FormControl>
+                        <FormControl><Input {...field} value={field.value || ""} className={inputCls} placeholder="Brief project description" disabled={!canManage} /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />
@@ -236,7 +242,7 @@ export function ProjectSheet({ project, clients }: { project?: Project; clients:
                     <FormField control={form.control} name="projectAddress" render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Project Address</FormLabel>
-                        <FormControl><Input {...field} value={field.value || ""} className={inputCls} placeholder="123 Site Road" /></FormControl>
+                        <FormControl><Input {...field} value={field.value || ""} className={inputCls} placeholder="123 Site Road" disabled={!canManage} /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />
@@ -245,20 +251,22 @@ export function ProjectSheet({ project, clients }: { project?: Project; clients:
               </div>
 
               {/* Actions */}
-              <div className="flex items-center gap-3 pt-2">
-                <Button
-                  type="submit"
-                  disabled={form.formState.isSubmitting}
-                  className={`flex-1 h-11 font-semibold rounded-lg ${isEditing ? "bg-slate-800 hover:bg-slate-900" : "bg-rose-600 hover:bg-rose-700"}`}
-                >
-                  {form.formState.isSubmitting ? "Saving..." : isEditing ? "Save Changes" : "Create Project"}
-                </Button>
-                {isEditing && (
-                  <Button type="button" variant="outline" className="h-11 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 rounded-lg" onClick={() => setConfirmOpen(true)} disabled={form.formState.isSubmitting}>
-                    Delete
+              {canManage && (
+                <div className="flex items-center gap-3 pt-2">
+                  <Button
+                    type="submit"
+                    disabled={form.formState.isSubmitting}
+                    className={`flex-1 h-11 font-semibold rounded-lg ${isEditing ? "bg-slate-800 hover:bg-slate-900" : "bg-rose-600 hover:bg-rose-700"}`}
+                  >
+                    {form.formState.isSubmitting ? "Saving..." : isEditing ? "Save Changes" : "Create Project"}
                   </Button>
-                )}
-              </div>
+                  {isEditing && (
+                    <Button type="button" variant="outline" className="h-11 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 rounded-lg" onClick={() => setConfirmOpen(true)} disabled={form.formState.isSubmitting}>
+                      Delete
+                    </Button>
+                  )}
+                </div>
+              )}
             </form>
           </Form>
         </div>

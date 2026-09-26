@@ -80,7 +80,7 @@ const columns: ColumnDef<CreditNoteData>[] = [
   }
 ];
 
-export function CreditNotesClient({ creditNotes }: { creditNotes: CreditNoteData[] }) {
+export function CreditNotesClient({ creditNotes, canManage }: { creditNotes: CreditNoteData[]; canManage?: boolean }) {
   const handleExport = () => {
     // Generate CSV
     const headers = ['Number', 'Client', 'Date', 'Amount', 'Status'];

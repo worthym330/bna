@@ -1,12 +1,12 @@
 "use server";
 import prisma from "@/lib/prisma";
-import { getTenantSession } from "@/lib/auth";
+import { getTenantSession, requirePermission } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { projectSchema } from "@/lib/validations";
 import * as z from "zod";
 
 export async function getProjects() {
-  const { organization } = await getTenantSession();
+  const { organization } = await requirePermission("projects.view");
   return prisma.project.findMany({
     where: { organizationId: organization!.id, deletedAt: null },
     include: { client: true },
@@ -15,7 +15,7 @@ export async function getProjects() {
 }
 
 export async function createProject(data: z.infer<typeof projectSchema>) {
-  const { organization } = await getTenantSession();
+  const { organization } = await requirePermission("projects.manage");
   const parsed = projectSchema.parse(data);
   const project = await prisma.project.create({
     data: {
@@ -31,7 +31,7 @@ export async function createProject(data: z.infer<typeof projectSchema>) {
 }
 
 export async function updateProject(id: string, data: z.infer<typeof projectSchema>) {
-  const { organization } = await getTenantSession();
+  const { organization } = await requirePermission("projects.manage");
   
   const existingProject = await prisma.project.findUnique({ where: { id } });
   if (!existingProject || existingProject.organizationId !== organization!.id) {
@@ -54,7 +54,7 @@ export async function updateProject(id: string, data: z.infer<typeof projectSche
 }
 
 export async function deleteProject(id: string) {
-  const { organization } = await getTenantSession();
+  const { organization } = await requirePermission("projects.manage");
   
   const existingProject = await prisma.project.findUnique({ where: { id } });
   if (!existingProject || existingProject.organizationId !== organization!.id) {

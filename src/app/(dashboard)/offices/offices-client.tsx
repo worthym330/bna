@@ -8,37 +8,37 @@ import { Office } from "@prisma/client";
 
 type OfficeData = Office;
 
-const columns: ColumnDef<OfficeData>[] = [
-  {
-    accessorKey: "siteName",
-    header: "Site Name",
-    cell: ({ row }) => <span className="font-medium">{row.getValue("siteName")}</span>
-  },
-  {
-    accessorKey: "city",
-    header: "City",
-    cell: ({ row }) => <span>{row.getValue("city")}</span>
-  },
-  {
-    accessorKey: "gstin",
-    header: "GSTIN",
-    cell: ({ row }) => <span>{row.getValue("gstin") || "-"}</span>
-  },
-  {
-    id: "actions",
-    header: () => <div className="text-right">Actions</div>,
-    cell: ({ row }) => {
-      const office = row.original;
-      return (
-        <div className="text-right">
-          <OfficeSheet office={office} />
-        </div>
-      );
+export function OfficesClient({ offices, canManage = true }: { offices: OfficeData[], canManage?: boolean }) {
+  const columns: ColumnDef<OfficeData>[] = [
+    {
+      accessorKey: "siteName",
+      header: "Site Name",
+      cell: ({ row }) => <span className="font-medium">{row.getValue("siteName")}</span>
+    },
+    {
+      accessorKey: "city",
+      header: "City",
+      cell: ({ row }) => <span>{row.getValue("city")}</span>
+    },
+    {
+      accessorKey: "gstin",
+      header: "GSTIN",
+      cell: ({ row }) => <span>{row.getValue("gstin") || "-"}</span>
+    },
+    {
+      id: "actions",
+      header: () => <div className="text-right">Actions</div>,
+      cell: ({ row }) => {
+        const office = row.original;
+        return (
+          <div className="text-right">
+            {canManage ? <OfficeSheet office={office} canManage={canManage} /> : <span className="text-xs text-slate-400">View Only</span>}
+          </div>
+        );
+      }
     }
-  }
-];
+  ];
 
-export function OfficesClient({ offices }: { offices: OfficeData[] }) {
   const handleExport = () => {
     const headers = ['Site Name', 'City', 'GSTIN'];
     const csvContent = [

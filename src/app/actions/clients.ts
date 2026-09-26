@@ -1,13 +1,13 @@
 "use server";
 import prisma from "@/lib/prisma";
-import { getTenantSession } from "@/lib/auth";
+import { getTenantSession, requirePermission } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { clientSchema } from "@/lib/validations";
 import * as z from "zod";
 import { logAudit } from "@/lib/audit";
 
 export async function getClients() {
-  const { organization } = await getTenantSession();
+  const { organization } = await requirePermission("clients.view");
   return prisma.client.findMany({
     where: { organizationId: organization!.id, deletedAt: null },
     orderBy: { clientName: "asc" },
@@ -15,7 +15,7 @@ export async function getClients() {
 }
 
 export async function createClient(data: z.infer<typeof clientSchema>) {
-  const { organization } = await getTenantSession();
+  const { organization } = await requirePermission("clients.manage");
   const parsed = clientSchema.parse(data);
   const client = await prisma.client.create({
     data: {
@@ -42,7 +42,7 @@ export async function createClient(data: z.infer<typeof clientSchema>) {
 }
 
 export async function updateClient(id: string, data: z.infer<typeof clientSchema>) {
-  const { organization } = await getTenantSession();
+  const { organization } = await requirePermission("clients.manage");
   
   const existingClient = await prisma.client.findUnique({ where: { id } });
   if (!existingClient || existingClient.organizationId !== organization!.id) {
@@ -76,7 +76,7 @@ export async function updateClient(id: string, data: z.infer<typeof clientSchema
 }
 
 export async function deleteClient(id: string) {
-  const { organization } = await getTenantSession();
+  const { organization } = await requirePermission("clients.manage");
   
   const existingClient = await prisma.client.findUnique({ where: { id } });
   if (!existingClient || existingClient.organizationId !== organization!.id) {

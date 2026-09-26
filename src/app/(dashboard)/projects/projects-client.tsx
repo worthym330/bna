@@ -13,9 +13,10 @@ type ClientData = Client;
 interface ProjectsClientProps {
   projects: ProjectData[];
   clients: ClientData[];
+  canManage?: boolean;
 }
 
-export function ProjectsClient({ projects, clients }: ProjectsClientProps) {
+export function ProjectsClient({ projects, clients, canManage = true }: ProjectsClientProps) {
   const columns: ColumnDef<ProjectData>[] = [
     {
       accessorKey: "projectName",
@@ -46,7 +47,7 @@ export function ProjectsClient({ projects, clients }: ProjectsClientProps) {
         const project = row.original;
         return (
           <div className="text-right">
-            <ProjectSheet project={project} clients={clients} />
+            {canManage ? <ProjectSheet project={project} clients={clients} canManage={canManage} /> : <span className="text-xs text-slate-400">View Only</span>}
           </div>
         );
       }

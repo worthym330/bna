@@ -1,4 +1,4 @@
-import { getTenantSession } from "@/lib/auth";
+import { getTenantSession, requirePermission } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { InvoiceDetailClient } from "./invoice-detail-client";
@@ -6,7 +6,9 @@ import Link from "next/link";
 
 export default async function InvoiceDetailPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
-  const { organization } = await getTenantSession();
+  const session = await requirePermission("invoices.view");
+  const { organization } = session;
+  const canManage = session.user.isSuperAdmin || session.permissions.includes("invoices.manage");
 
   const invoice = await prisma.invoice.findUnique({
     where: { id: params.id, organizationId: organization!.id },
@@ -39,7 +41,7 @@ export default async function InvoiceDetailPage(props: { params: Promise<{ id: s
         </div>
       </div>
 
-      <InvoiceDetailClient invoice={invoice} />
+      <InvoiceDetailClient invoice={invoice} canManage={canManage} />
     </div>
   );
 }

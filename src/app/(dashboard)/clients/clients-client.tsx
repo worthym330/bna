@@ -8,37 +8,37 @@ import { Client } from "@prisma/client";
 
 type ClientData = Client;
 
-const columns: ColumnDef<ClientData>[] = [
-  {
-    accessorKey: "clientName",
-    header: "Client Name",
-    cell: ({ row }) => <span className="font-medium">{row.getValue("clientName")}</span>
-  },
-  {
-    accessorKey: "email",
-    header: "Email",
-    cell: ({ row }) => <span>{row.getValue("email") || "-"}</span>
-  },
-  {
-    accessorKey: "gstin",
-    header: "GSTIN",
-    cell: ({ row }) => <span>{row.getValue("gstin") || "-"}</span>
-  },
-  {
-    id: "actions",
-    header: () => <div className="text-right">Actions</div>,
-    cell: ({ row }) => {
-      const client = row.original;
-      return (
-        <div className="text-right">
-          <ClientSheet client={client} />
-        </div>
-      );
+export function ClientsClient({ clients, canManage = true }: { clients: ClientData[], canManage?: boolean }) {
+  const columns: ColumnDef<ClientData>[] = [
+    {
+      accessorKey: "clientName",
+      header: "Client Name",
+      cell: ({ row }) => <span className="font-medium">{row.getValue("clientName")}</span>
+    },
+    {
+      accessorKey: "email",
+      header: "Email",
+      cell: ({ row }) => <span>{row.getValue("email") || "-"}</span>
+    },
+    {
+      accessorKey: "gstin",
+      header: "GSTIN",
+      cell: ({ row }) => <span>{row.getValue("gstin") || "-"}</span>
+    },
+    {
+      id: "actions",
+      header: () => <div className="text-right">Actions</div>,
+      cell: ({ row }) => {
+        const client = row.original;
+        return (
+          <div className="text-right">
+            {canManage ? <ClientSheet client={client} canManage={canManage} /> : <span className="text-xs text-slate-400">View Only</span>}
+          </div>
+        );
+      }
     }
-  }
-];
+  ];
 
-export function ClientsClient({ clients }: { clients: ClientData[] }) {
   const handleExport = () => {
     const headers = ['Client Name', 'Email', 'GSTIN'];
     const csvContent = [

@@ -1,9 +1,9 @@
 import prisma from "@/lib/prisma";
-import { getTenantSession } from "@/lib/auth";
+import { getTenantSession, requirePermission } from "@/lib/auth";
 import { CreditNoteForm } from "@/components/forms/CreditNoteForm";
 
 export default async function CreateCreditNotePage({ searchParams }: { searchParams: Promise<{ linkedInvoiceId?: string }> }) {
-  const { organization } = await getTenantSession();
+  const { organization } = await requirePermission("invoices.manage");
   const { linkedInvoiceId } = await searchParams;
 
   const [clients, projects, series, templates, linkedInvoice, offices] = await Promise.all([

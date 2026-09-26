@@ -3,7 +3,9 @@ import { logoutAction } from "@/app/actions/auth"
 import { getTenantSession } from "@/lib/auth"
 
 export async function Sidebar() {
-  const { user, organization } = await getTenantSession();
+  const { user, organization, permissions } = await getTenantSession();
+
+  const hasPerm = (perm: string) => user.isSuperAdmin || permissions.includes(perm);
 
   return (
     <aside className="w-64 bg-slate-900 text-slate-100 flex-shrink-0 min-h-screen">
@@ -25,33 +27,59 @@ export async function Sidebar() {
             <Link href="/" className="block px-3 py-2 rounded-md hover:bg-slate-800 transition-colors">
               Dashboard
             </Link>
-            <Link href="/organization" className="block px-3 py-2 rounded-md hover:bg-slate-800 transition-colors">
-              Organization Profile
+            
+            {hasPerm('settings.view') && (
+              <Link href="/organization" className="block px-3 py-2 rounded-md hover:bg-slate-800 transition-colors">
+                Organization Profile
+              </Link>
+            )}
+            
+            {hasPerm('clients.view') && (
+              <Link href="/clients" className="block px-3 py-2 rounded-md hover:bg-slate-800 transition-colors">
+                Clients
+              </Link>
+            )}
+            
+            {hasPerm('invoices.view') && (
+              <>
+                <Link href="/invoices" className="block px-3 py-2 rounded-md hover:bg-slate-800 transition-colors">
+                  Invoices
+                </Link>
+                <Link href="/credit-notes" className="block px-3 py-2 rounded-md hover:bg-slate-800 transition-colors">
+                  Credit Notes
+                </Link>
+              </>
+            )}
+            
+            {hasPerm('projects.view') && (
+              <Link href="/projects" className="block px-3 py-2 rounded-md hover:bg-slate-800 transition-colors">
+                Projects
+              </Link>
+            )}
+            
+            {hasPerm('offices.view') && (
+              <Link href="/offices" className="block px-3 py-2 rounded-md hover:bg-slate-800 transition-colors">
+                Offices
+              </Link>
+            )}
+            
+            <Link href="/emails" className="block px-3 py-2 rounded-md hover:bg-slate-800 transition-colors">
+              Emails
             </Link>
-            <Link href="/clients" className="block px-3 py-2 rounded-md hover:bg-slate-800 transition-colors">
-              Clients
-            </Link>
-            <Link href="/invoices" className="block px-3 py-2 rounded-md hover:bg-slate-800 transition-colors">
-              Invoices
-            </Link>
-            <Link href="/credit-notes" className="block px-3 py-2 rounded-md hover:bg-slate-800 transition-colors">
-              Credit Notes
-            </Link>
-            <Link href="/projects" className="block px-3 py-2 rounded-md hover:bg-slate-800 transition-colors">
-              Projects
-            </Link>
-            <Link href="/offices" className="block px-3 py-2 rounded-md hover:bg-slate-800 transition-colors">
-              Offices
-            </Link>
-            <Link href="/settings" className="block px-3 py-2 rounded-md hover:bg-slate-800 transition-colors">
-              Settings
-            </Link>
-            <Link href="/settings/templates" className="block px-3 py-2 rounded-md hover:bg-slate-800 transition-colors">
-              Templates
-            </Link>
-            <Link href="/settings/audit-logs" className="block px-3 py-2 rounded-md hover:bg-slate-800 transition-colors">
-              Audit Logs
-            </Link>
+            
+            {hasPerm('settings.view') && (
+              <>
+                <Link href="/settings" className="block px-3 py-2 rounded-md hover:bg-slate-800 transition-colors">
+                  Settings
+                </Link>
+                <Link href="/settings/templates" className="block px-3 py-2 rounded-md hover:bg-slate-800 transition-colors">
+                  Templates
+                </Link>
+                <Link href="/settings/audit-logs" className="block px-3 py-2 rounded-md hover:bg-slate-800 transition-colors">
+                  Audit Logs
+                </Link>
+              </>
+            )}
           </>
         )}
       </nav>

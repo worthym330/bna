@@ -80,7 +80,7 @@ const columns: ColumnDef<InvoiceData>[] = [
   }
 ];
 
-export function InvoicesClient({ invoices }: { invoices: InvoiceData[] }) {
+export function InvoicesClient({ invoices, canManage }: { invoices: InvoiceData[]; canManage?: boolean }) {
   const handleExport = () => {
     // Generate CSV
     const headers = ['Number', 'Client', 'Date', 'Amount', 'Status'];
