@@ -26,6 +26,12 @@ export async function createClient(data: z.infer<typeof clientSchema>) {
       phone: parsed.phone || null,
       gstin: parsed.gstin || null,
       pan: parsed.pan || null,
+      addressLine1: parsed.addressLine1 || null,
+      addressLine2: parsed.addressLine2 || null,
+      city: parsed.city || null,
+      state: parsed.state || null,
+      country: parsed.country || null,
+      pincode: parsed.pincode || null,
     },
   });
   
@@ -54,6 +60,12 @@ export async function updateClient(id: string, data: z.infer<typeof clientSchema
       phone: parsed.phone || null,
       gstin: parsed.gstin || null,
       pan: parsed.pan || null,
+      addressLine1: parsed.addressLine1 || null,
+      addressLine2: parsed.addressLine2 || null,
+      city: parsed.city || null,
+      state: parsed.state || null,
+      country: parsed.country || null,
+      pincode: parsed.pincode || null,
     },
   });
   

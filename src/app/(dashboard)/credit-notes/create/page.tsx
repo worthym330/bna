@@ -1,6 +1,6 @@
 import prisma from "@/lib/prisma";
 import { getTenantSession } from "@/lib/auth";
-import { CreateCreditNoteForm } from "./create-credit-note-form";
+import { CreditNoteForm } from "@/components/forms/CreditNoteForm";
 
 export default async function CreateCreditNotePage({ searchParams }: { searchParams: Promise<{ linkedInvoiceId?: string }> }) {
   const { organization } = await getTenantSession();
@@ -16,7 +16,7 @@ export default async function CreateCreditNotePage({ searchParams }: { searchPar
       orderBy: { projectName: 'asc' }
     }),
     prisma.invoiceSeries.findMany({
-      where: { organizationId: organization!.id, isActive: true },
+      where: { organizationId: organization!.id, isActive: true, type: 'CREDIT_NOTE' },
       orderBy: { createdAt: 'desc' }
     }),
     prisma.invoiceTemplate.findMany({
@@ -49,7 +49,8 @@ export default async function CreateCreditNotePage({ searchParams }: { searchPar
         <h1 className="text-3xl font-bold tracking-tight">Create Credit Note</h1>
         <p className="text-slate-500 mt-1">Issue a credit note independently or against an existing invoice.</p>
       </div>
-      <CreateCreditNoteForm
+      <CreditNoteForm
+        mode="create"
         clients={clients}
         projects={projects}
         series={series}

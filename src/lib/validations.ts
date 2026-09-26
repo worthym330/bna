@@ -36,6 +36,12 @@ export const clientSchema = z.object({
   phone: z.string().nullable().optional(),
   gstin: z.string().nullable().optional(),
   pan: z.string().nullable().optional(),
+  addressLine1: z.string().min(1, "Address Line 1 is required"),
+  addressLine2: z.string().nullable().optional(),
+  city: z.string().min(1, "City is required"),
+  state: z.string().min(1, "State is required"),
+  country: z.string().min(1, "Country is required"),
+  pincode: z.string().nullable().optional(),
 });
 
 export const officeSchema = z.object({

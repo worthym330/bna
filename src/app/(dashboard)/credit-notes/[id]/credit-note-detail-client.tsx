@@ -3,12 +3,16 @@
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useState } from "react";
-import { finalizeCreditNoteAction } from "@/app/actions/invoices";
+import { useRouter } from "next/navigation";
+import { finalizeCreditNoteAction, deleteDraftCreditNoteAction, cancelCreditNoteAction } from "@/app/actions/invoices";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 export function CreditNoteDetailClient({ creditNote }: { creditNote: any }) {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmCancel, setConfirmCancel] = useState(false);
 
   async function handleFinalize() {
     setLoading(true);
@@ -23,6 +27,32 @@ export function CreditNoteDetailClient({ creditNote }: { creditNote: any }) {
     } catch (err: any) {
       console.error(err);
       toast.error(err.message || "Failed to finalize credit note");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleDelete() {
+    setLoading(true);
+    try {
+      await deleteDraftCreditNoteAction(creditNote.id);
+      toast.success("Draft deleted.");
+      router.push("/credit-notes");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to delete");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleCancel() {
+    setLoading(true);
+    try {
+      await cancelCreditNoteAction(creditNote.id);
+      toast.success("Credit note cancelled.");
+      window.location.reload();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to cancel");
     } finally {
       setLoading(false);
     }
@@ -73,48 +103,57 @@ export function CreditNoteDetailClient({ creditNote }: { creditNote: any }) {
         <div className="flex justify-end pt-4 border-t">
           <div className="w-64 space-y-2">
             <div className="flex justify-between text-sm">
-              <span>Subtotal</span>
-              <span>{creditNote.subTotal.toFixed(2)}</span>
+              <span>Subtotal</span><span>{creditNote.subTotal.toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span>Tax Total</span>
-              <span>{creditNote.taxTotal.toFixed(2)}</span>
+              <span>Tax Total</span><span>{creditNote.taxTotal.toFixed(2)}</span>
             </div>
             <div className="flex justify-between font-bold text-lg pt-2 border-t text-red-600">
-              <span>Total Credit</span>
-              <span>{creditNote.totalAmount.toFixed(2)}</span>
+              <span>Total Credit</span><span>{creditNote.totalAmount.toFixed(2)}</span>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="flex gap-4">
+      <div className="flex flex-wrap gap-3">
+        {/* DRAFT actions */}
         {creditNote.status === "DRAFT" && (
           <>
             <Button onClick={() => setConfirmOpen(true)} disabled={loading || !creditNote.seriesId}>
-              {loading ? "Finalizing..." : "Finalize & Generate PDF"}
+              {loading ? "Processing..." : "Finalize & Generate PDF"}
             </Button>
             <a
               href={`/credit-notes/${creditNote.id}/edit`}
-              className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-white transition-colors focus-visible:outline-none focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 border border-slate-200 bg-white hover:bg-slate-100 hover:text-slate-900 h-10 px-4 py-2"
+              className="inline-flex items-center justify-center rounded-md text-sm font-medium border border-slate-200 bg-white hover:bg-slate-100 h-10 px-4 py-2"
             >
               Edit Draft
             </a>
+            <Button variant="destructive" onClick={() => setConfirmDelete(true)} disabled={loading}>
+              Delete Draft
+            </Button>
+            {!creditNote.seriesId && (
+              <p className="text-sm text-red-500 self-center">Assign an Invoice Series before finalizing.</p>
+            )}
           </>
         )}
-        {creditNote.status === "DRAFT" && !creditNote.seriesId && (
-          <p className="text-sm text-red-500 self-center">You must assign an Invoice Series before finalizing.</p>
-        )}
 
-        {creditNote.status === "FINALIZED" && creditNote.driveFileId && (
-          <a
-            href={`/api/invoices/${creditNote.id}/pdf`}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-slate-200 bg-white hover:bg-slate-100 hover:text-slate-900 h-10 px-4 py-2"
-          >
-            Download PDF
-          </a>
+        {/* FINALIZED actions */}
+        {creditNote.status === "FINALIZED" && (
+          <>
+            {creditNote.driveFileId && (
+              <a
+                href={`/api/invoices/${creditNote.id}/pdf`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center justify-center rounded-md text-sm font-medium border border-slate-200 bg-white hover:bg-slate-100 h-10 px-4 py-2"
+              >
+                Download PDF
+              </a>
+            )}
+            <Button variant="outline" className="border-orange-200 text-orange-700 hover:bg-orange-50" onClick={() => setConfirmCancel(true)} disabled={loading}>
+              Cancel Credit Note
+            </Button>
+          </>
         )}
       </div>
 
@@ -122,10 +161,26 @@ export function CreditNoteDetailClient({ creditNote }: { creditNote: any }) {
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
         title="Finalize Credit Note"
-        description="Are you sure you want to finalize this credit note? This will lock it, assign a permanent number, and generate the PDF."
+        description="This will lock the credit note, assign a permanent number, and generate the PDF. Cannot be undone."
         onConfirm={handleFinalize}
         confirmText="Finalize & Generate PDF"
         destructive={false}
+      />
+      <ConfirmDialog
+        open={confirmDelete}
+        onOpenChange={setConfirmDelete}
+        title="Delete Draft Credit Note"
+        description="This will permanently delete this draft. This action cannot be undone."
+        onConfirm={handleDelete}
+        confirmText="Delete"
+      />
+      <ConfirmDialog
+        open={confirmCancel}
+        onOpenChange={setConfirmCancel}
+        title="Cancel Credit Note"
+        description="This will mark the credit note as CANCELLED. It remains for records but cannot be edited."
+        onConfirm={handleCancel}
+        confirmText="Cancel Credit Note"
       />
     </div>
   );

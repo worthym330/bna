@@ -1,7 +1,7 @@
 import prisma from "@/lib/prisma";
 import { getTenantSession } from "@/lib/auth";
 import { notFound, redirect } from "next/navigation";
-import { EditCreditNoteForm } from "./edit-credit-note-form";
+import { CreditNoteForm } from "@/components/forms/CreditNoteForm";
 
 export default async function EditCreditNotePage({ params }: { params: Promise<{ id: string }> }) {
   const { organization } = await getTenantSession();
@@ -30,7 +30,7 @@ export default async function EditCreditNotePage({ params }: { params: Promise<{
       orderBy: { projectName: 'asc' }
     }),
     prisma.invoiceSeries.findMany({
-      where: { organizationId: organization.id, isActive: true },
+      where: { organizationId: organization.id, isActive: true, type: 'CREDIT_NOTE' },
       orderBy: { createdAt: 'desc' }
     }),
     prisma.invoiceTemplate.findMany({
@@ -55,7 +55,8 @@ export default async function EditCreditNotePage({ params }: { params: Promise<{
         <h1 className="text-3xl font-bold tracking-tight">Edit Draft Credit Note</h1>
         <p className="text-slate-500 mt-1">Make changes to your draft credit note.</p>
       </div>
-      <EditCreditNoteForm
+      <CreditNoteForm
+        mode="edit"
         creditNote={creditNote}
         clients={clients}
         projects={projects}

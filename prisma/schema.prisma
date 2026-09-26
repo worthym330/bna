@@ -162,8 +162,12 @@ model Client {
   gstin              String?
   pan                String?
   taxRegistrationType String?
+  addressLine1       String?
+  addressLine2       String?
+  city               String?
   state              String?
   country            String?
+  pincode            String?
   deletedAt          DateTime?    // Soft delete
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
@@ -260,6 +264,7 @@ model InvoiceSeries {
   id              String       @id @default(uuid())
   organizationId  String
   name            String       // e.g., 'Standard FY23-24'
+  type            String       @default("INVOICE") // INVOICE or CREDIT_NOTE
   prefix          String       // e.g., 'INV-'
   suffix          String       // e.g., '-BOM'
   padding         Int          // e.g., 4 (results in 0001)

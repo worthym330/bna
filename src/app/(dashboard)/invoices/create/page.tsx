@@ -1,6 +1,6 @@
 import { getTenantSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import { CreateInvoiceForm } from "./create-invoice-form";
+import { InvoiceForm } from "@/components/forms/InvoiceForm";
 
 export default async function CreateInvoicePage() {
   const { organization } = await getTenantSession();
@@ -16,7 +16,7 @@ export default async function CreateInvoicePage() {
   });
 
   const series = await prisma.invoiceSeries.findMany({
-    where: { organizationId: organization!.id, isActive: true },
+    where: { organizationId: organization!.id, isActive: true, type: 'INVOICE' },
     orderBy: { name: 'asc' }
   });
 
@@ -36,9 +36,10 @@ export default async function CreateInvoicePage() {
         <h1 className="text-3xl font-bold tracking-tight">Create Invoice</h1>
       </div>
 
-      <CreateInvoiceForm 
-        clients={clients} 
-        projects={projects} 
+      <InvoiceForm
+        mode="create"
+        clients={clients}
+        projects={projects}
         series={series}
         templates={templates}
         offices={offices}

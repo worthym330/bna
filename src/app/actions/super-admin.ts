@@ -106,3 +106,53 @@ export async function assignRoleToMemberAction(memberId: string, roleId: string 
   });
   revalidatePath("/super-admin");
 }
+
+export async function updateOrganizationAction(orgId: string, data: {
+  legalName: string;
+  displayName: string;
+  email?: string;
+  gstin?: string;
+  pan?: string;
+}) {
+  const { user } = await getTenantSession();
+  if (!user.isSuperAdmin) throw new Error("Unauthorized");
+  await prisma.organization.update({ where: { id: orgId }, data });
+  revalidatePath("/super-admin");
+}
+
+export async function deleteOrganizationAction(orgId: string) {
+  const { user } = await getTenantSession();
+  if (!user.isSuperAdmin) throw new Error("Unauthorized");
+  // Soft protection: check for members
+  const memberCount = await prisma.organizationMember.count({ where: { organizationId: orgId } });
+  if (memberCount > 0) throw new Error(`Cannot delete: ${memberCount} member(s) belong to this org.`);
+  await prisma.organization.delete({ where: { id: orgId } });
+  revalidatePath("/super-admin");
+}
+
+export async function updateUserAction(userId: string, data: {
+  name: string;
+  email: string;
+}) {
+  const { user } = await getTenantSession();
+  if (!user.isSuperAdmin) throw new Error("Unauthorized");
+  await prisma.user.update({ where: { id: userId }, data: { name: data.name, email: data.email } });
+  revalidatePath("/super-admin");
+}
+
+export async function deleteUserAction(userId: string) {
+  const { user } = await getTenantSession();
+  if (!user.isSuperAdmin) throw new Error("Unauthorized");
+  if (user.id === userId) throw new Error("Cannot delete your own account.");
+  await prisma.organizationMember.deleteMany({ where: { userId } });
+  await prisma.user.delete({ where: { id: userId } });
+  revalidatePath("/super-admin");
+}
+
+export async function resetUserPasswordAction(userId: string, newPassword: string) {
+  const { user } = await getTenantSession();
+  if (!user.isSuperAdmin) throw new Error("Unauthorized");
+  const hash = await bcrypt.hash(newPassword, 10);
+  await prisma.user.update({ where: { id: userId }, data: { passwordHash: hash } });
+  revalidatePath("/super-admin");
+}

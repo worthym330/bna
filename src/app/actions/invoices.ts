@@ -80,3 +80,61 @@ export async function finalizeCreditNoteAction(creditNoteId: string) {
   revalidatePath(`/credit-notes/${creditNoteId}`);
   return { success: true };
 }
+
+export async function deleteDraftInvoiceAction(invoiceId: string) {
+  const { organization } = await getTenantSession();
+  if (!organization) throw new Error("Unauthorized");
+
+  const prisma = (await import("@/lib/prisma")).default;
+  const invoice = await prisma.invoice.findFirst({
+    where: { id: invoiceId, organizationId: organization!.id, status: "DRAFT" }
+  });
+  if (!invoice) throw new Error("Invoice not found or not a draft");
+
+  await prisma.invoice.delete({ where: { id: invoiceId } });
+  await logAudit("DELETE", "Invoice", invoiceId, null, null);
+  revalidatePath("/invoices");
+}
+
+export async function cancelInvoiceAction(invoiceId: string) {
+  const { organization } = await getTenantSession();
+  if (!organization) throw new Error("Unauthorized");
+
+  const prisma = (await import("@/lib/prisma")).default;
+  await prisma.invoice.update({
+    where: { id: invoiceId, organizationId: organization!.id },
+    data: { status: "CANCELLED" }
+  });
+  await logAudit("CANCEL", "Invoice", invoiceId, { status: "FINALIZED" }, { status: "CANCELLED" });
+  revalidatePath("/invoices");
+  revalidatePath(`/invoices/${invoiceId}`);
+}
+
+export async function deleteDraftCreditNoteAction(creditNoteId: string) {
+  const { organization } = await getTenantSession();
+  if (!organization) throw new Error("Unauthorized");
+
+  const prisma = (await import("@/lib/prisma")).default;
+  const cn = await prisma.creditNote.findFirst({
+    where: { id: creditNoteId, organizationId: organization!.id, status: "DRAFT" }
+  });
+  if (!cn) throw new Error("Credit note not found or not a draft");
+
+  await prisma.creditNote.delete({ where: { id: creditNoteId } });
+  await logAudit("DELETE", "CreditNote", creditNoteId, null, null);
+  revalidatePath("/credit-notes");
+}
+
+export async function cancelCreditNoteAction(creditNoteId: string) {
+  const { organization } = await getTenantSession();
+  if (!organization) throw new Error("Unauthorized");
+
+  const prisma = (await import("@/lib/prisma")).default;
+  await prisma.creditNote.update({
+    where: { id: creditNoteId, organizationId: organization!.id },
+    data: { status: "CANCELLED" }
+  });
+  await logAudit("CANCEL", "CreditNote", creditNoteId, { status: "FINALIZED" }, { status: "CANCELLED" });
+  revalidatePath("/credit-notes");
+  revalidatePath(`/credit-notes/${creditNoteId}`);
+}

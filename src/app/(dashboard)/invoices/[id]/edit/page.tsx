@@ -1,7 +1,7 @@
 import prisma from "@/lib/prisma";
 import { getTenantSession } from "@/lib/auth";
 import { notFound, redirect } from "next/navigation";
-import { EditInvoiceForm } from "./edit-invoice-form";
+import { InvoiceForm } from "@/components/forms/InvoiceForm";
 
 export default async function EditInvoicePage({ params }: { params: Promise<{ id: string }> }) {
   const { organization } = await getTenantSession();
@@ -30,7 +30,7 @@ export default async function EditInvoicePage({ params }: { params: Promise<{ id
       orderBy: { projectName: 'asc' }
     }),
     prisma.invoiceSeries.findMany({
-      where: { organizationId: organization.id, isActive: true },
+      where: { organizationId: organization.id, isActive: true, type: 'INVOICE' },
       orderBy: { createdAt: 'desc' }
     }),
     prisma.invoiceTemplate.findMany({
@@ -49,7 +49,8 @@ export default async function EditInvoicePage({ params }: { params: Promise<{ id
         <h1 className="text-3xl font-bold tracking-tight">Edit Draft Invoice</h1>
         <p className="text-slate-500 mt-1">Make changes to your draft invoice.</p>
       </div>
-      <EditInvoiceForm
+      <InvoiceForm
+        mode="edit"
         invoice={invoice}
         clients={clients}
         projects={projects}

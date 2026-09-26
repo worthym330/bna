@@ -13,7 +13,7 @@ export default async function SuperAdminDashboard() {
     redirect("/");
   }
 
-  const [organizations, permissions] = await Promise.all([
+  const [organizations, permissions, allUsers] = await Promise.all([
     prisma.organization.findMany({
       include: {
         _count: { select: { members: true, clients: true, invoices: true } },
@@ -33,8 +33,15 @@ export default async function SuperAdminDashboard() {
       },
       orderBy: { createdAt: 'desc' }
     }),
-    prisma.permission.findMany({ orderBy: { name: 'asc' } })
+    prisma.permission.findMany({ orderBy: { name: 'asc' } }),
+    prisma.organizationMember.findMany({
+      include: { user: { select: { id: true, name: true, email: true } } },
+      orderBy: { createdAt: 'desc' }
+    })
   ]);
+
+  // Flatten users with their organizationId for easy lookup
+  const users = allUsers.map(m => ({ ...m.user, organizationId: m.organizationId }));
 
   return (
     <div className="space-y-8">
@@ -52,7 +59,7 @@ export default async function SuperAdminDashboard() {
       {/* ─── Organizations Overview ─── */}
       <div className="rounded-md border bg-white p-6">
         <h2 className="text-xl font-semibold mb-4">Organizations on Platform</h2>
-        <SuperAdminClient organizations={organizations} />
+        <SuperAdminClient organizations={organizations} users={users} />
       </div>
 
       {/* ─── Roles & Permissions Manager ─── */}
