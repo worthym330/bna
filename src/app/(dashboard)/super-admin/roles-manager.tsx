@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { createRoleAction, updateRolePermissionsAction, deleteRoleAction, assignRoleToMemberAction } from "@/app/actions/super-admin";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 interface Role { id: string; name: string; description: string | null; permissions: { permission: { id: string; name: string } }[] }
 interface Permission { id: string; name: string; description: string | null }
@@ -44,6 +45,7 @@ export function RolesManager({ organizationId, organizationName, roles, permissi
   const [newRoleName, setNewRoleName] = useState("");
   const [newRoleDesc, setNewRoleDesc] = useState("");
   const [newPerms, setNewPerms] = useState<Set<string>>(new Set());
+  const [roleToDelete, setRoleToDelete] = useState<{ id: string, name: string } | null>(null);
 
   const permMap = new Map(permissions.map(p => [p.name, p.id]));
   const permGroups = groupPermissions(permissions);
@@ -65,12 +67,13 @@ export function RolesManager({ organizationId, organizationName, roles, permissi
     });
   };
 
-  const handleDelete = (roleId: string, name: string) => {
-    if (!confirm(`Delete role "${name}"?`)) return;
+  const handleDelete = () => {
+    if (!roleToDelete) return;
     startTransition(async () => {
       try {
-        await deleteRoleAction(roleId);
+        await deleteRoleAction(roleToDelete.id);
         toast.success("Role deleted");
+        setRoleToDelete(null);
       } catch (err: any) { toast.error(err.message); }
     });
   };
@@ -161,7 +164,7 @@ export function RolesManager({ organizationId, organizationName, roles, permissi
                   </div>
                   <div className="flex gap-2">
                     <Button size="sm" variant="outline" onClick={() => startEdit(role)}>Edit Permissions</Button>
-                    <Button size="sm" variant="destructive" onClick={() => handleDelete(role.id, role.name)}>Delete</Button>
+                    <Button size="sm" variant="destructive" onClick={() => setRoleToDelete({ id: role.id, name: role.name })}>Delete</Button>
                   </div>
                 </div>
                 {editingRole?.id === role.id && (
@@ -237,6 +240,15 @@ export function RolesManager({ organizationId, organizationName, roles, permissi
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={!!roleToDelete}
+        onOpenChange={(open) => !open && setRoleToDelete(null)}
+        title="Delete Role"
+        description={`Are you sure you want to delete the "${roleToDelete?.name}" role?`}
+        onConfirm={handleDelete}
+        confirmText="Delete"
+      />
     </div>
   );
 }

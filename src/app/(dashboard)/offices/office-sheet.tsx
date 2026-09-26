@@ -17,6 +17,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { createOffice, updateOffice, deleteOffice } from "@/app/actions/offices";
 import { officeSchema } from "@/lib/validations";
+import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 type Office = {
   id: string;
@@ -36,6 +38,7 @@ type Office = {
 
 export function OfficeSheet({ office }: { office?: Office }) {
   const [open, setOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const isEditing = !!office;
 
   const form = useForm<z.infer<typeof officeSchema>>({
@@ -64,21 +67,21 @@ export function OfficeSheet({ office }: { office?: Office }) {
         await createOffice(values);
       }
       setOpen(false);
+      toast.success(isEditing ? "Office updated successfully!" : "Office created successfully!");
       if (!isEditing) form.reset();
     } catch (error) {
       console.error(error);
-      alert("Failed to save office");
+      toast.error("Failed to save office");
     }
   }
 
   async function handleDelete() {
-    if (confirm("Are you sure you want to delete this office?")) {
-      try {
-        await deleteOffice(office!.id);
-        setOpen(false);
-      } catch (error) {
-        alert("Failed to delete office");
-      }
+    try {
+      await deleteOffice(office!.id);
+      setOpen(false);
+      toast.success("Office deleted successfully!");
+    } catch (error) {
+      toast.error("Failed to delete office");
     }
   }
 
@@ -265,7 +268,7 @@ export function OfficeSheet({ office }: { office?: Office }) {
                 {form.formState.isSubmitting ? "Saving..." : isEditing ? "Save Changes" : "Create Office"}
               </Button>
               {isEditing && (
-                <Button type="button" variant="destructive" onClick={handleDelete} disabled={form.formState.isSubmitting}>
+                <Button type="button" variant="destructive" onClick={() => setConfirmOpen(true)} disabled={form.formState.isSubmitting}>
                   Delete
                 </Button>
               )}
@@ -273,6 +276,15 @@ export function OfficeSheet({ office }: { office?: Office }) {
           </form>
         </Form>
       </SheetContent>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="Delete Office"
+        description="Are you sure you want to delete this office? This action cannot be undone."
+        onConfirm={handleDelete}
+        confirmText="Delete"
+      />
     </Sheet>
   );
 }

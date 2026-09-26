@@ -17,6 +17,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { createProject, updateProject, deleteProject } from "@/app/actions/projects";
 import { projectSchema } from "@/lib/validations";
+import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 type Client = { id: string; clientName: string };
 
@@ -37,6 +39,7 @@ type Project = {
 
 export function ProjectSheet({ project, clients }: { project?: Project; clients: Client[] }) {
   const [open, setOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const isEditing = !!project;
 
   const form = useForm<z.infer<typeof projectSchema>>({
@@ -64,21 +67,21 @@ export function ProjectSheet({ project, clients }: { project?: Project; clients:
         await createProject(values);
       }
       setOpen(false);
+      toast.success(isEditing ? "Project updated successfully!" : "Project created successfully!");
       if (!isEditing) form.reset();
     } catch (error) {
       console.error(error);
-      alert("Failed to save project");
+      toast.error("Failed to save project");
     }
   }
 
   async function handleDelete() {
-    if (confirm("Are you sure you want to delete this project?")) {
-      try {
-        await deleteProject(project!.id);
-        setOpen(false);
-      } catch (error) {
-        alert("Failed to delete project");
-      }
+    try {
+      await deleteProject(project!.id);
+      setOpen(false);
+      toast.success("Project deleted successfully!");
+    } catch (error) {
+      toast.error("Failed to delete project");
     }
   }
 
@@ -267,7 +270,7 @@ export function ProjectSheet({ project, clients }: { project?: Project; clients:
                 {form.formState.isSubmitting ? "Saving..." : isEditing ? "Save Changes" : "Create Project"}
               </Button>
               {isEditing && (
-                <Button type="button" variant="destructive" onClick={handleDelete} disabled={form.formState.isSubmitting}>
+                <Button type="button" variant="destructive" onClick={() => setConfirmOpen(true)} disabled={form.formState.isSubmitting}>
                   Delete
                 </Button>
               )}
@@ -275,6 +278,15 @@ export function ProjectSheet({ project, clients }: { project?: Project; clients:
           </form>
         </Form>
       </SheetContent>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="Delete Project"
+        description="Are you sure you want to delete this project? This action cannot be undone."
+        onConfirm={handleDelete}
+        confirmText="Delete"
+      />
     </Sheet>
   );
 }

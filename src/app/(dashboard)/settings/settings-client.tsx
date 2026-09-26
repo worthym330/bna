@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { getGoogleAuthUrl, uploadAssetAction } from "@/app/actions/drive";
+import { getGoogleAuthUrl, uploadAssetAction, disconnectDriveAction } from "@/app/actions/drive";
 
 type DocumentAsset = {
   id: string;
@@ -31,6 +31,21 @@ export function SettingsClient({
     } catch (error) {
       console.error(error);
       toast.error("Failed to connect to Google Drive");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleDisconnectDrive() {
+    if (!confirm("Are you sure you want to disconnect Google Drive? This will prevent generating new invoices until reconnected.")) return;
+    setLoading(true);
+    try {
+      await disconnectDriveAction();
+      toast.success("Disconnected Google Drive");
+      setTimeout(() => window.location.reload(), 1500);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to disconnect from Google Drive");
     } finally {
       setLoading(false);
     }
@@ -71,9 +86,14 @@ export function SettingsClient({
           </div>
           <div>
             {isDriveConnected ? (
-              <span className="inline-flex items-center rounded-full bg-green-50 px-3 py-1 text-sm font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
-                Connected
-              </span>
+              <div className="flex items-center gap-4">
+                <span className="inline-flex items-center rounded-full bg-green-50 px-3 py-1 text-sm font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
+                  Connected
+                </span>
+                <Button variant="destructive" size="sm" onClick={handleDisconnectDrive} disabled={loading}>
+                  Disconnect
+                </Button>
+              </div>
             ) : (
               <Button onClick={handleConnectDrive} disabled={loading}>
                 {loading ? "Connecting..." : "Connect Drive"}

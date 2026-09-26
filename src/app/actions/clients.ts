@@ -4,6 +4,7 @@ import { getTenantSession } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { clientSchema } from "@/lib/validations";
 import * as z from "zod";
+import { logAudit } from "@/lib/audit";
 
 export async function getClients() {
   const { organization } = await getTenantSession();
@@ -27,6 +28,9 @@ export async function createClient(data: z.infer<typeof clientSchema>) {
       pan: parsed.pan || null,
     },
   });
+  
+  await logAudit("CREATE", "Client", client.id, null, client);
+  
   revalidatePath("/clients");
   return client;
 }
@@ -52,6 +56,9 @@ export async function updateClient(id: string, data: z.infer<typeof clientSchema
       pan: parsed.pan || null,
     },
   });
+  
+  await logAudit("UPDATE", "Client", client.id, existingClient, client);
+  
   revalidatePath("/clients");
   return client;
 }
@@ -69,6 +76,8 @@ export async function deleteClient(id: string) {
     where: { id },
     data: { deletedAt: new Date() },
   });
+  
+  await logAudit("DELETE", "Client", id, existingClient, { deletedAt: new Date() });
   
   revalidatePath("/clients");
   return { success: true };

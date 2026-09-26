@@ -7,9 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { createDraftCreditNoteAction } from "@/app/actions/invoices";
+import { updateDraftCreditNoteAction } from "@/app/actions/invoices";
 import { calculateLineItemTax } from "@/lib/tax";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 
 const lineItemSchema = z.object({
   description: z.string().min(1, "Description is required"),
@@ -21,10 +21,12 @@ const lineItemSchema = z.object({
 
 const creditNoteSchema = z.object({
   clientId: z.string().min(1, "Client is required"),
+  officeId: z.string().min(1, "Billing Office is required"),
   projectId: z.string().optional(),
   seriesId: z.string().optional(),
   templateId: z.string().optional(),
   invoiceDate: z.string().min(1, "Credit Note Date is required"),
+  taxType: z.enum(["CGST_SGST", "IGST"]).default("CGST_SGST"),
   linkedInvoiceId: z.string().optional(),
   reason: z.string().optional(),
   notes: z.string().optional(),
@@ -33,38 +35,65 @@ const creditNoteSchema = z.object({
 
 type FormData = z.infer<typeof creditNoteSchema>;
 
-export function CreateCreditNoteForm({ clients, projects, series, templates, finalizedInvoices, linkedInvoice, organization }: any) {
+export function EditCreditNoteForm({ creditNote, clients, projects, series, templates, offices, finalizedInvoices, organization }: any) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [selectedLinkedInvoice, setSelectedLinkedInvoice] = useState<any>(linkedInvoice || null);
-
-  const defaultTemplate = templates?.find((t: any) => t.isDefault);
+  const [selectedLinkedInvoice, setSelectedLinkedInvoice] = useState<any>(
+    creditNote.linkedInvoiceId ? finalizedInvoices?.find((i: any) => i.id === creditNote.linkedInvoiceId) : null
+  );
 
   const { register, control, handleSubmit, watch, setValue, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(creditNoteSchema) as any,
     defaultValues: {
-      invoiceDate: new Date().toISOString().split('T')[0],
-      templateId: defaultTemplate?.id || "",
-      clientId: linkedInvoice?.clientId || "",
-      linkedInvoiceId: linkedInvoice?.id || "",
-      reason: linkedInvoice ? "Deduction / rate difference on Final Bill" : "",
-      lineItems: linkedInvoice?.lineItems?.length
-        ? linkedInvoice.lineItems.map((li: any) => ({
-            description: li.description,
-            hsnSac: li.hsnSac || "",
-            quantity: li.quantity,
-            unitPrice: li.unitPrice,
-            taxRate: li.taxRate,
-          }))
-        : [{ description: "", quantity: 1, unitPrice: 0, taxRate: 18 }]
+      clientId: creditNote.clientId,
+      officeId: creditNote.officeId || (offices?.length === 1 ? offices[0].id : ""),
+      projectId: creditNote.projectId || "",
+      seriesId: creditNote.seriesId || "",
+      templateId: creditNote.templateId || "",
+      invoiceDate: new Date(creditNote.creditNoteDate).toISOString().split('T')[0],
+      taxType: creditNote.taxType || "CGST_SGST",
+      linkedInvoiceId: creditNote.linkedInvoiceId || "",
+      reason: creditNote.reason || "",
+      notes: creditNote.notes || "",
+      lineItems: creditNote.lineItems.length > 0 ? creditNote.lineItems.map((li: any) => ({
+        description: li.description,
+        hsnSac: li.hsnSac || "",
+        quantity: li.quantity,
+        unitPrice: li.unitPrice,
+        taxRate: li.taxRate,
+      })) : [{ description: "", quantity: 1, unitPrice: 0, taxRate: 18 }]
     }
   });
 
-  const { fields, append, remove } = useFieldArray({ control, name: "lineItems" });
-  const watchLineItems = watch("lineItems");
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "lineItems"
+  });
 
+  const watchLineItems = watch("lineItems");
   const watchClientId = watch("clientId");
-  
+  const watchOfficeId = watch("officeId");
+  const watchTaxType = watch("taxType");
+
+  // Auto-detect tax type based on states (only when clientId or officeId changes, not initially unless required)
+  useEffect(() => {
+    if (watchClientId && watchOfficeId && (watchClientId !== creditNote.clientId || watchOfficeId !== creditNote.officeId)) {
+      const selectedClient = clients.find((c: any) => c.id === watchClientId);
+      const selectedOffice = offices.find((o: any) => o.id === watchOfficeId);
+      const clientState = selectedClient?.state?.trim().toLowerCase();
+      const officeState = selectedOffice?.state?.trim().toLowerCase();
+      
+      if (clientState && officeState) {
+        if (clientState !== officeState) {
+          setValue("taxType", "IGST");
+        } else {
+          setValue("taxType", "CGST_SGST");
+        }
+      }
+    }
+  }, [watchClientId, watchOfficeId, clients, offices, setValue, creditNote.clientId, creditNote.officeId]);
+
+  // Tax calculation
   const totals = useMemo(() => {
     let subTotal = 0;
     let taxTotal = 0;
@@ -73,14 +102,13 @@ export function CreateCreditNoteForm({ clients, projects, series, templates, fin
     let igst = 0;
 
     const selectedClient = clients.find((c: any) => c.id === watchClientId);
-    const orgState = organization?.defaultCountry || ""; 
+    const orgState = organization.defaultCountry || ""; 
     const clientState = selectedClient?.state || "";
-
     watchLineItems?.forEach(item => {
       const amount = (item.quantity || 0) * (item.unitPrice || 0);
       subTotal += amount;
       
-      const tax = calculateLineItemTax(amount, item.taxRate || 0, orgState, clientState);
+      const tax = calculateLineItemTax(amount, item.taxRate || 0, watchTaxType);
       taxTotal += tax.totalTax;
       cgst += tax.cgst;
       sgst += tax.sgst;
@@ -88,32 +116,38 @@ export function CreateCreditNoteForm({ clients, projects, series, templates, fin
     });
 
     return { subTotal, taxTotal, totalAmount: subTotal + taxTotal, cgst, sgst, igst };
-  }, [watchLineItems, watchClientId, clients, organization]);
+  }, [watchLineItems, watchClientId, clients, organization, watchTaxType]);
 
   const handleLinkedInvoiceChange = (invoiceId: string) => {
-    const inv = finalizedInvoices.find((i: any) => i.id === invoiceId);
+    const inv = finalizedInvoices?.find((i: any) => i.id === invoiceId);
     setSelectedLinkedInvoice(inv || null);
     if (inv) {
       setValue("clientId", inv.clientId);
-      setValue("reason", "Deduction / rate difference on Final Bill");
     }
   };
 
   const onSubmit = async (data: FormData) => {
     setLoading(true);
     try {
-      const selectedClient = clients.find((c: any) => c.id === data.clientId);
-      const enrichedLineItems = data.lineItems.map(item => {
-        const amount = item.quantity * item.unitPrice;
-        const tax = calculateLineItemTax(amount, item.taxRate, organization?.defaultCountry || "", selectedClient?.state || "");
-        return { ...item, taxAmount: tax.totalTax, totalAmount: amount + tax.totalTax };
-      });
+      const payload = {
+        ...data,
+        lineItems: data.lineItems.map(item => {
+          const amount = item.quantity * item.unitPrice;
+          const tax = calculateLineItemTax(amount, item.taxRate, data.taxType as any);
+          return {
+            ...item,
+            taxAmount: tax.totalTax,
+            totalAmount: amount + tax.totalTax
+          };
+        })
+      };
 
-      const result = await createDraftCreditNoteAction({ ...data, lineItems: enrichedLineItems });
-      toast.success("Credit Note saved as Draft!");
-      router.push(`/invoices/${result.id}`);
-    } catch (err: any) {
-      toast.error(err.message || "Failed to create credit note");
+      const res = await updateDraftCreditNoteAction(creditNote.id, payload);
+      toast.success("Draft Credit Note Updated!");
+      router.push(`/credit-notes/${res.id}`);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to update draft");
     } finally {
       setLoading(false);
     }
@@ -121,7 +155,7 @@ export function CreateCreditNoteForm({ clients, projects, series, templates, fin
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-
+      
       {/* ─── Link to Invoice Banner ─── */}
       <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
         <h3 className="font-semibold text-amber-800 mb-3">Against Invoice (Optional)</h3>
@@ -134,7 +168,7 @@ export function CreateCreditNoteForm({ clients, projects, series, templates, fin
               onChange={e => { register("linkedInvoiceId").onChange(e); handleLinkedInvoiceChange(e.target.value); }}
             >
               <option value="">— Independent Credit Note —</option>
-              {finalizedInvoices.map((inv: any) => (
+              {finalizedInvoices?.map((inv: any) => (
                 <option key={inv.id} value={inv.id}>
                   {inv.invoiceNumber} — {inv.client.clientName} (₹{inv.totalAmount.toLocaleString()})
                 </option>
@@ -157,7 +191,6 @@ export function CreateCreditNoteForm({ clients, projects, series, templates, fin
         </div>
       </div>
 
-      {/* ─── Document Details ─── */}
       <div className="bg-white rounded-md border shadow-sm p-6 space-y-4">
         <h2 className="text-lg font-semibold">Credit Note Details</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -170,8 +203,25 @@ export function CreateCreditNoteForm({ clients, projects, series, templates, fin
             {errors.clientId && <p className="text-red-500 text-xs mt-1">{errors.clientId.message}</p>}
           </div>
           <div>
+            <label className="block text-sm font-medium mb-1">Billing Office *</label>
+            <select className="w-full border rounded px-3 py-2 text-sm" {...register("officeId")}>
+              <option value="">Select an Office</option>
+              {offices.map((o: any) => (
+                <option key={o.id} value={o.id}>{o.siteName} ({o.state})</option>
+              ))}
+            </select>
+            {errors.officeId && <p className="text-xs text-red-500 mt-1">{errors.officeId.message}</p>}
+          </div>
+          <div>
             <label className="block text-sm font-medium mb-1">Credit Note Date *</label>
             <Input type="date" {...register("invoiceDate")} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Tax Type *</label>
+            <select className="w-full border rounded px-3 py-2 text-sm" {...register("taxType")}>
+              <option value="CGST_SGST">CGST & SGST</option>
+              <option value="IGST">IGST</option>
+            </select>
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Project</label>
@@ -199,7 +249,6 @@ export function CreateCreditNoteForm({ clients, projects, series, templates, fin
         </div>
       </div>
 
-      {/* ─── Line Items ─── */}
       <div className="bg-white rounded-md border shadow-sm p-6">
         <h2 className="text-lg font-semibold mb-4">Items Being Credited</h2>
         <div className="space-y-3">
@@ -215,7 +264,7 @@ export function CreateCreditNoteForm({ clients, projects, series, templates, fin
           {fields.map((field, index) => {
             const item = watchLineItems[index];
             const amount = (item?.quantity || 0) * (item?.unitPrice || 0);
-            const tax = calculateLineItemTax(amount, item?.taxRate || 0, organization?.defaultCountry || "", clients.find((c: any) => c.id === watch("clientId"))?.state || "");
+            const tax = calculateLineItemTax(amount, item?.taxRate || 0, watchTaxType);
             return (
               <div key={field.id} className="grid grid-cols-12 gap-2 items-center bg-slate-50 rounded-lg p-2">
                 <div className="col-span-12 md:col-span-4">
@@ -261,18 +310,18 @@ export function CreateCreditNoteForm({ clients, projects, series, templates, fin
         </div>
       </div>
 
-      {/* ─── Notes ─── */}
       <div className="bg-white rounded-md border shadow-sm p-6">
         <label className="block text-sm font-medium mb-1">Internal Notes</label>
         <textarea className="w-full border rounded px-3 py-2 text-sm min-h-[80px]" placeholder="Optional notes..." {...register("notes")} />
       </div>
 
-      <div className="flex gap-4">
+      <div className="pt-6 flex justify-end gap-4">
+        <Button type="button" variant="outline" onClick={() => router.back()}>Cancel</Button>
         <Button type="submit" disabled={loading} className="bg-red-600 hover:bg-red-700">
-          {loading ? "Saving..." : "Save Credit Note as Draft"}
+          {loading ? "Saving..." : "Update Draft Credit Note"}
         </Button>
-        <Button type="button" variant="outline" onClick={() => router.push("/invoices")}>Cancel</Button>
       </div>
     </form>
   );
 }
+

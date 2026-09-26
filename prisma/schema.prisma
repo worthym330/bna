@@ -34,6 +34,7 @@ model Organization {
   gstin               String?
   defaultCurrency     String               @default("INR")
   defaultCountry      String               @default("India")
+  state               String?
   createdAt           DateTime             @default(now())
   updatedAt           DateTime             @updatedAt
   members             OrganizationMember[]
@@ -46,8 +47,10 @@ model Organization {
   googleCredential    GoogleCredential?
   documentAssets      DocumentAsset[]
   invoiceSeries       InvoiceSeries[]
+  creditNoteSeriesId  String?              // Default series for credit notes
   invoiceTemplates    InvoiceTemplate[]
   invoices            Invoice[]
+  creditNotes         CreditNote[]
 }
 
 model OrganizationMember {
@@ -142,6 +145,8 @@ model Office {
   updatedAt      DateTime     @updatedAt
 
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  invoices       Invoice[]
+  creditNotes    CreditNote[]
 }
 
 model Client {
@@ -167,6 +172,7 @@ model Client {
   addresses          ClientAddress[]
   projects           Project[]
   invoices           Invoice[]
+  creditNotes        CreditNote[]
 
   @@unique([organizationId, clientCode])
 }
@@ -212,6 +218,7 @@ model Project {
   organization      Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   client            Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
   invoices          Invoice[]
+  creditNotes       CreditNote[]
 
   @@unique([organizationId, projectCode])
 }
@@ -263,6 +270,7 @@ model InvoiceSeries {
 
   organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   invoices        Invoice[]
+  creditNotes     CreditNote[]
 
   @@unique([organizationId, name])
 }
@@ -280,6 +288,7 @@ model InvoiceTemplate {
 
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   invoices       Invoice[]
+  creditNotes    CreditNote[]
 
   @@unique([organizationId, name])
 }
@@ -289,9 +298,9 @@ model Invoice {
   organizationId  String
   clientId        String
   projectId       String?
+  officeId        String?
   seriesId        String?
   templateId      String?
-  type            String       @default("INVOICE") // INVOICE, CREDIT_NOTE
   status          String       @default("DRAFT") // DRAFT, FINALIZED, CANCELLED
   invoiceNumber   String?      @unique
   invoiceDate     DateTime
@@ -299,21 +308,21 @@ model Invoice {
   subTotal        Float        @default(0)
   taxTotal        Float        @default(0)
   totalAmount     Float        @default(0)
+  taxType         String       @default("CGST_SGST") // CGST_SGST, IGST
   notes           String?      @db.Text
   terms           String?      @db.Text
   driveFileId     String?
-  // Credit Note specific fields
-  linkedInvoiceId String?      // The original invoice this credit note is against
-  reason          String?      @db.Text // Reason for credit note
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 
   organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   client          Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
   project         Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  office          Office?      @relation(fields: [officeId], references: [id], onDelete: SetNull)
   series          InvoiceSeries? @relation(fields: [seriesId], references: [id], onDelete: SetNull)
   template        InvoiceTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
   lineItems       InvoiceLineItem[]
+  creditNotes     CreditNote[]
 }
 
 model InvoiceLineItem {
@@ -330,4 +339,53 @@ model InvoiceLineItem {
   updatedAt     DateTime     @updatedAt
 
   invoice       Invoice      @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+}
+
+model CreditNote {
+  id              String       @id @default(uuid())
+  organizationId  String
+  clientId        String
+  projectId       String?
+  officeId        String?
+  seriesId        String?
+  templateId      String?
+  status          String       @default("DRAFT") // DRAFT, FINALIZED, CANCELLED
+  creditNoteNumber String?     @unique
+  creditNoteDate  DateTime
+  subTotal        Float        @default(0)
+  taxTotal        Float        @default(0)
+  totalAmount     Float        @default(0)
+  taxType         String       @default("CGST_SGST") // CGST_SGST, IGST
+  notes           String?      @db.Text
+  terms           String?      @db.Text
+  driveFileId     String?
+  linkedInvoiceId String      
+  reason          String?      @db.Text
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  client          Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  project         Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  office          Office?      @relation(fields: [officeId], references: [id], onDelete: SetNull)
+  series          InvoiceSeries? @relation(fields: [seriesId], references: [id], onDelete: SetNull)
+  template        InvoiceTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  linkedInvoice   Invoice      @relation(fields: [linkedInvoiceId], references: [id], onDelete: Cascade)
+  lineItems       CreditNoteLineItem[]
+}
+
+model CreditNoteLineItem {
+  id            String       @id @default(uuid())
+  creditNoteId  String
+  description   String
+  hsnSac        String?
+  quantity      Float
+  unitPrice     Float
+  taxRate       Float        // percentage, e.g., 18
+  taxAmount     Float
+  totalAmount   Float
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  creditNote    CreditNote   @relation(fields: [creditNoteId], references: [id], onDelete: Cascade)
 }

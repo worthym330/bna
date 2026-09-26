@@ -17,6 +17,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { createClient, updateClient, deleteClient } from "@/app/actions/clients";
 import { clientSchema } from "@/lib/validations";
+import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 type Client = {
   id: string;
@@ -30,6 +32,7 @@ type Client = {
 
 export function ClientSheet({ client }: { client?: Client }) {
   const [open, setOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const isEditing = !!client;
 
   const form = useForm<z.infer<typeof clientSchema>>({
@@ -52,21 +55,21 @@ export function ClientSheet({ client }: { client?: Client }) {
         await createClient(values);
       }
       setOpen(false);
+      toast.success(isEditing ? "Client updated successfully!" : "Client created successfully!");
       if (!isEditing) form.reset();
     } catch (error) {
       console.error(error);
-      alert("Failed to save client");
+      toast.error("Failed to save client");
     }
   }
 
   async function handleDelete() {
-    if (confirm("Are you sure you want to delete this client?")) {
-      try {
-        await deleteClient(client!.id);
-        setOpen(false);
-      } catch (error) {
-        alert("Failed to delete client");
-      }
+    try {
+      await deleteClient(client!.id);
+      setOpen(false);
+      toast.success("Client deleted successfully!");
+    } catch (error) {
+      toast.error("Failed to delete client");
     }
   }
 
@@ -168,7 +171,7 @@ export function ClientSheet({ client }: { client?: Client }) {
                 {form.formState.isSubmitting ? "Saving..." : isEditing ? "Save Changes" : "Create Client"}
               </Button>
               {isEditing && (
-                <Button type="button" variant="destructive" onClick={handleDelete} disabled={form.formState.isSubmitting}>
+                <Button type="button" variant="destructive" onClick={() => setConfirmOpen(true)} disabled={form.formState.isSubmitting}>
                   Delete
                 </Button>
               )}
@@ -176,6 +179,15 @@ export function ClientSheet({ client }: { client?: Client }) {
           </form>
         </Form>
       </SheetContent>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="Delete Client"
+        description="Are you sure you want to delete this client? This action cannot be undone."
+        onConfirm={handleDelete}
+        confirmText="Delete"
+      />
     </Sheet>
   );
 }

@@ -4,24 +4,28 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { createTemplateAction, updateTemplateAction, deleteTemplateAction, setAsDefaultTemplateAction } from "@/app/actions/templates";
-import GrapesEditor from "@/components/GrapesEditor";
+import { TemplateBuilder } from "@/components/TemplateBuilder";
 import { TEMPLATE_GALLERY } from "@/lib/template-gallery";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 export function TemplatesClient({ initialTemplates, assets }: { initialTemplates: any[], assets: any[] }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [htmlContent, setHtmlContent] = useState("");
+  const [designConfig, setDesignConfig] = useState<any[] | null>(null);
   const [showEditor, setShowEditor] = useState(false);
   const [showGallery, setShowGallery] = useState(false);
+  const [templateToDelete, setTemplateToDelete] = useState<string | null>(null);
 
   const startNew = () => {
     setShowGallery(true);
   };
 
-  const selectTemplate = (templateHtml: string) => {
+  const selectTemplate = (templateHtml: string, initialBlocks?: any[]) => {
     setEditingId("NEW");
     setName("");
     setHtmlContent(templateHtml);
+    setDesignConfig(initialBlocks || null);
     setShowGallery(false);
     setShowEditor(true);
   };
@@ -30,12 +34,12 @@ export function TemplatesClient({ initialTemplates, assets }: { initialTemplates
     setEditingId(t.id);
     setName(t.name);
     setHtmlContent(t.htmlContent);
+    setDesignConfig(t.designConfig || null);
     setShowEditor(true);
   };
 
-  const handleSave = async (finalHtml: string) => {
+  const handleSave = async (finalHtml: string, blocks?: any[]) => {
     if (!name.trim()) {
-      // Prompt for name if not set (which it won't be if NEW)
       const inputName = prompt("Enter a name for this template:");
       if (!inputName || !inputName.trim()) {
         toast.error("Template name is required to save.");
@@ -45,7 +49,7 @@ export function TemplatesClient({ initialTemplates, assets }: { initialTemplates
     }
 
     try {
-      const payload = { name: name.trim() || "Untitled", htmlContent: finalHtml };
+      const payload = { name: name.trim() || "Untitled", htmlContent: finalHtml, designConfig: blocks };
 
       if (editingId === "NEW") {
         await createTemplateAction(payload);
@@ -61,11 +65,12 @@ export function TemplatesClient({ initialTemplates, assets }: { initialTemplates
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Delete this template?")) return;
+  const handleDelete = async () => {
+    if (!templateToDelete) return;
     try {
-      await deleteTemplateAction(id);
+      await deleteTemplateAction(templateToDelete);
       toast.success("Template deleted");
+      setTemplateToDelete(null);
     } catch (err) {
       toast.error("Failed to delete");
     }
@@ -85,7 +90,7 @@ export function TemplatesClient({ initialTemplates, assets }: { initialTemplates
             <div 
               key={template.id} 
               className="border rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md hover:border-primary cursor-pointer transition-all flex flex-col h-[280px]"
-              onClick={() => selectTemplate(template.html)}
+              onClick={() => selectTemplate(template.html, template.blocks)}
             >
               <div className="h-40 bg-slate-100 flex items-center justify-center p-4">
                  <div className="text-slate-400 text-sm font-medium border-2 border-dashed border-slate-300 rounded p-6 text-center w-full h-full flex flex-col items-center justify-center">
@@ -106,8 +111,9 @@ export function TemplatesClient({ initialTemplates, assets }: { initialTemplates
 
   if (showEditor) {
     return (
-      <GrapesEditor 
-        initialHtml={htmlContent} 
+      <TemplateBuilder 
+        initialConfig={designConfig}
+        assets={assets}
         onSave={handleSave} 
         onClose={() => {
           setShowEditor(false);
@@ -141,13 +147,22 @@ export function TemplatesClient({ initialTemplates, assets }: { initialTemplates
                 )}
                 <Button variant="secondary" size="sm" onClick={() => editTemplate(t)}>Open Visual Studio</Button>
                 {!t.isDefault && (
-                  <Button variant="destructive" size="sm" onClick={() => handleDelete(t.id)}>Delete</Button>
+                  <Button variant="destructive" size="sm" onClick={() => setTemplateToDelete(t.id)}>Delete</Button>
                 )}
               </div>
             </div>
           ))
         )}
       </div>
+
+      <ConfirmDialog
+        open={!!templateToDelete}
+        onOpenChange={(open) => !open && setTemplateToDelete(null)}
+        title="Delete Template"
+        description="Are you sure you want to delete this template? This action cannot be undone."
+        onConfirm={handleDelete}
+        confirmText="Delete"
+      />
     </div>
   );
 }

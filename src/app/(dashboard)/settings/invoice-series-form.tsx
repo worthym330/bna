@@ -46,7 +46,7 @@ export function InvoiceSeriesForm({ existingSeries }: { existingSeries: any[] })
                 </span>
               </div>
               <div className="text-xs font-mono bg-white px-2 py-1 rounded border">
-                Current Sequence: {series.currentSequence}
+                Current Sequence: {series.currentSequence} (Next: {series.currentSequence + 1})
               </div>
             </div>
           ))}
@@ -72,6 +72,11 @@ export function InvoiceSeriesForm({ existingSeries }: { existingSeries: any[] })
         <div className="space-y-2">
           <label className="text-sm font-medium">Padding (Zeroes)</label>
           <Input name="padding" type="number" min={1} max={10} defaultValue={4} required />
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Starts From</label>
+          <Input name="startSequence" type="number" min={1} defaultValue={1} required />
         </div>
 
         <div className="md:col-span-2 flex justify-end mt-2">

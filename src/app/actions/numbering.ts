@@ -10,6 +10,7 @@ const seriesSchema = z.object({
   prefix: z.string(),
   suffix: z.string(),
   padding: z.coerce.number().min(1).max(10),
+  startSequence: z.coerce.number().min(1).default(1),
 });
 
 export async function createInvoiceSeriesAction(formData: FormData) {
@@ -24,6 +25,7 @@ export async function createInvoiceSeriesAction(formData: FormData) {
     prefix: formData.get("prefix") || "",
     suffix: formData.get("suffix") || "",
     padding: formData.get("padding"),
+    startSequence: formData.get("startSequence") || 1,
   };
 
   const parsed = seriesSchema.parse(rawData);
@@ -35,7 +37,7 @@ export async function createInvoiceSeriesAction(formData: FormData) {
       prefix: parsed.prefix,
       suffix: parsed.suffix,
       padding: parsed.padding,
-      currentSequence: 0,
+      currentSequence: parsed.startSequence - 1,
       isActive: true,
     }
   });

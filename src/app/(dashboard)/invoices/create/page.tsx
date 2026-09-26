@@ -25,6 +25,11 @@ export default async function CreateInvoicePage() {
     orderBy: { name: 'asc' }
   });
 
+  const offices = await prisma.office.findMany({
+    where: { organizationId: organization!.id, deletedAt: null },
+    orderBy: { siteName: 'asc' }
+  });
+
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
       <div className="flex items-center justify-between">
@@ -36,6 +41,7 @@ export default async function CreateInvoicePage() {
         projects={projects} 
         series={series}
         templates={templates}
+        offices={offices}
         organization={organization}
       />
     </div>

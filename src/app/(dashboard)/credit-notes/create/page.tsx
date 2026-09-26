@@ -6,7 +6,7 @@ export default async function CreateCreditNotePage({ searchParams }: { searchPar
   const { organization } = await getTenantSession();
   const { linkedInvoiceId } = await searchParams;
 
-  const [clients, projects, series, templates, linkedInvoice] = await Promise.all([
+  const [clients, projects, series, templates, linkedInvoice, offices] = await Promise.all([
     prisma.client.findMany({
       where: { organizationId: organization!.id, deletedAt: null },
       orderBy: { clientName: 'asc' }
@@ -25,15 +25,19 @@ export default async function CreateCreditNotePage({ searchParams }: { searchPar
     }),
     linkedInvoiceId
       ? prisma.invoice.findFirst({
-          where: { id: linkedInvoiceId, organizationId: organization!.id, type: 'INVOICE' },
+          where: { id: linkedInvoiceId, organizationId: organization!.id },
           include: { client: true, lineItems: true }
         })
       : null,
+    prisma.office.findMany({
+      where: { organizationId: organization!.id, deletedAt: null },
+      orderBy: { siteName: 'asc' }
+    })
   ]);
 
   // Also fetch finalized invoices so user can link to one
   const finalizedInvoices = await prisma.invoice.findMany({
-    where: { organizationId: organization!.id, type: 'INVOICE', status: 'FINALIZED' },
+    where: { organizationId: organization!.id, status: 'FINALIZED' },
     include: { client: true },
     orderBy: { createdAt: 'desc' },
     take: 50,
@@ -52,6 +56,7 @@ export default async function CreateCreditNotePage({ searchParams }: { searchPar
         templates={templates}
         finalizedInvoices={finalizedInvoices}
         linkedInvoice={linkedInvoice}
+        offices={offices}
         organization={organization}
       />
     </div>

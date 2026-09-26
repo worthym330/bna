@@ -7,8 +7,8 @@ import React from "react";
 /**
  * Creates or updates an invoice in DRAFT state.
  */
-export async function saveDraftInvoice(data: any, organizationId: string, type: 'INVOICE' | 'CREDIT_NOTE' = 'INVOICE') {
-  const { clientId, projectId, seriesId, templateId, invoiceDate, dueDate, notes, terms, lineItems, linkedInvoiceId, reason } = data;
+export async function saveDraftInvoice(data: any, organizationId: string) {
+  const { clientId, officeId, projectId, seriesId, templateId, invoiceDate, dueDate, notes, terms, lineItems, taxType } = data;
   
   // Calculate totals
   let subTotal = 0;
@@ -25,20 +25,80 @@ export async function saveDraftInvoice(data: any, organizationId: string, type: 
     data: {
       organizationId,
       clientId,
+      officeId,
       projectId: projectId || null,
       seriesId: seriesId || null,
       templateId: templateId || null,
-      type,
       status: "DRAFT",
       invoiceDate: new Date(invoiceDate),
       dueDate: dueDate ? new Date(dueDate) : null,
       notes,
       terms,
-      linkedInvoiceId: linkedInvoiceId || null,
-      reason: reason || null,
       subTotal,
       taxTotal,
       totalAmount,
+      taxType: taxType || "CGST_SGST",
+      lineItems: {
+        create: lineItems.map((item: any) => ({
+          description: item.description,
+          hsnSac: item.hsnSac,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          taxRate: item.taxRate,
+          taxAmount: item.taxAmount,
+          totalAmount: (item.quantity * item.unitPrice) + item.taxAmount,
+        }))
+      }
+    },
+    include: { lineItems: true, client: true, organization: true }
+  });
+}
+
+/**
+ * Updates an existing invoice in DRAFT state.
+ */
+export async function updateDraftInvoice(invoiceId: string, data: any, organizationId: string) {
+  const invoice = await prisma.invoice.findUnique({
+    where: { id: invoiceId, organizationId }
+  });
+
+  if (!invoice) throw new Error("Invoice not found");
+  if (invoice.status !== "DRAFT") throw new Error("Only draft invoices can be edited");
+
+  const { clientId, officeId, projectId, seriesId, templateId, invoiceDate, dueDate, notes, terms, lineItems, taxType } = data;
+  
+  // Calculate totals
+  let subTotal = 0;
+  let taxTotal = 0;
+  
+  lineItems.forEach((item: any) => {
+    subTotal += item.quantity * item.unitPrice;
+    taxTotal += item.taxAmount;
+  });
+
+  const totalAmount = subTotal + taxTotal;
+
+  // First delete existing line items
+  await prisma.invoiceLineItem.deleteMany({
+    where: { invoiceId }
+  });
+
+  return await prisma.invoice.update({
+    where: { id: invoiceId },
+    data: {
+      clientId,
+      officeId,
+      projectId: projectId || null,
+      seriesId: seriesId || null,
+      templateId: templateId || null,
+      invoiceDate: new Date(invoiceDate),
+      dueDate: dueDate ? new Date(dueDate) : null,
+      notes,
+      terms,
+      subTotal,
+      taxTotal,
+      totalAmount,
+      taxType: taxType || "CGST_SGST",
       lineItems: {
         create: lineItems.map((item: any) => ({
           description: item.description,

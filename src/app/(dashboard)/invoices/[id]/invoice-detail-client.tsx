@@ -4,15 +4,13 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useState } from "react";
 import { finalizeInvoiceAction } from "@/app/actions/invoices";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 export function InvoiceDetailClient({ invoice }: { invoice: any }) {
   const [loading, setLoading] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   async function handleFinalize() {
-    if (!confirm("Are you sure you want to finalize this invoice? This will lock it, assign a permanent number, and generate the PDF.")) {
-      return;
-    }
-
     setLoading(true);
     try {
       const result = await finalizeInvoiceAction(invoice.id);
@@ -93,9 +91,17 @@ export function InvoiceDetailClient({ invoice }: { invoice: any }) {
 
       <div className="flex gap-4">
         {invoice.status === "DRAFT" && (
-          <Button onClick={handleFinalize} disabled={loading || !invoice.seriesId}>
-            {loading ? "Finalizing..." : "Finalize & Generate PDF"}
-          </Button>
+          <>
+            <Button onClick={() => setConfirmOpen(true)} disabled={loading || !invoice.seriesId}>
+              {loading ? "Finalizing..." : "Finalize & Generate PDF"}
+            </Button>
+            <a
+              href={`/invoices/${invoice.id}/edit`}
+              className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-white transition-colors focus-visible:outline-none focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 border border-slate-200 bg-white hover:bg-slate-100 hover:text-slate-900 h-10 px-4 py-2"
+            >
+              Edit Draft
+            </a>
+          </>
         )}
         {invoice.status === "DRAFT" && !invoice.seriesId && (
           <p className="text-sm text-red-500 self-center">You must assign an Invoice Series before finalizing.</p>
@@ -120,6 +126,16 @@ export function InvoiceDetailClient({ invoice }: { invoice: any }) {
           </a>
         )}
       </div>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="Finalize Invoice"
+        description="Are you sure you want to finalize this invoice? This will lock it, assign a permanent number, and generate the PDF."
+        onConfirm={handleFinalize}
+        confirmText="Finalize & Generate PDF"
+        destructive={false}
+      />
     </div>
   );
 }

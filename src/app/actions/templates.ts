@@ -4,7 +4,7 @@ import prisma from "@/lib/prisma";
 import { getTenantSession } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 
-export async function createTemplateAction(data: { name: string, htmlContent: string }) {
+export async function createTemplateAction(data: { name: string, htmlContent: string, designConfig?: any }) {
   const { organization } = await getTenantSession();
   if (!organization) throw new Error("Unauthorized");
 
@@ -16,6 +16,7 @@ export async function createTemplateAction(data: { name: string, htmlContent: st
       organizationId: organization!.id,
       name: data.name,
       htmlContent: data.htmlContent,
+      designConfig: data.designConfig || null,
       isDefault: count === 0
     }
   });
@@ -24,13 +25,17 @@ export async function createTemplateAction(data: { name: string, htmlContent: st
   revalidatePath("/invoices/create");
 }
 
-export async function updateTemplateAction(id: string, data: { name: string, htmlContent: string }) {
+export async function updateTemplateAction(id: string, data: { name: string, htmlContent: string, designConfig?: any }) {
   const { organization } = await getTenantSession();
   if (!organization) throw new Error("Unauthorized");
 
   await prisma.invoiceTemplate.update({
     where: { id, organizationId: organization!.id },
-    data
+    data: {
+      name: data.name,
+      htmlContent: data.htmlContent,
+      ...(data.designConfig !== undefined && { designConfig: data.designConfig })
+    }
   });
 
   revalidatePath("/settings/templates");

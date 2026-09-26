@@ -3,9 +3,16 @@ import { BHAGYA_TEMPLATE_HTML } from './default-template';
 export const TEMPLATE_GALLERY = [
   {
     id: "bhagya",
-    name: "Bhagya (Legacy)",
-    description: "The original tabular layout.",
-    html: BHAGYA_TEMPLATE_HTML
+    name: "Standard Invoice",
+    description: "A standard block-based invoice layout.",
+    html: BHAGYA_TEMPLATE_HTML,
+    blocks: [
+      { id: '1', type: 'HEADER', settings: { showLogo: true, showOrgName: true, showOrgAddress: true, showOrgTaxId: true, showInvoiceNumber: true, showDate: true, showDueDate: true, primaryColor: '#0f172a' } },
+      { id: '2', type: 'CLIENT_INFO', settings: { showClientAddress: true, showClientTaxId: true, showProjectInfo: true, bgColor: '#f8fafc' } },
+      { id: '3', type: 'LINE_ITEMS', settings: { showHsn: true, showTaxRate: true, headerColor: '#f1f5f9' } },
+      { id: '4', type: 'TOTALS', settings: { showAmountInWords: true, totalsBgColor: '#f8fafc' } },
+      { id: '5', type: 'FOOTER', settings: { showTerms: true, showSignature: true, customText: '' } }
+    ]
   },
   {
     id: "modern",

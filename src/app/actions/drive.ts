@@ -1,6 +1,7 @@
 "use server";
 import { oauth2Client, SCOPES } from "@/lib/drive";
 import { getTenantSession } from "@/lib/auth";
+import prisma from "@/lib/prisma";
 
 export async function getGoogleAuthUrl() {
   const { user } = await getTenantSession();
@@ -45,5 +46,25 @@ export async function uploadAssetAction(formData: FormData, assetType: "LETTERHE
     assetType
   );
 
+  return { success: true };
+}
+
+export async function disconnectDriveAction() {
+  const { organization } = await getTenantSession();
+  
+  if (!organization) {
+    throw new Error("Unauthorized");
+  }
+
+  await prisma.googleCredential.delete({
+    where: { organizationId: organization.id }
+  });
+  
+  // Optionally update connection ID in organization if needed
+  await prisma.organization.update({
+    where: { id: organization.id },
+    data: { googleConnectionId: null }
+  });
+  
   return { success: true };
 }

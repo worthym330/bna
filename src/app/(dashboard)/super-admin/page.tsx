@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { CreateOrgForm } from "./create-org-form";
 import { CreateUserForm } from "./create-user-form";
 import { RolesManager } from "./roles-manager";
+import { SuperAdminClient } from "./super-admin-client";
 
 export default async function SuperAdminDashboard() {
   const { user } = await getTenantSession();
@@ -51,32 +52,7 @@ export default async function SuperAdminDashboard() {
       {/* ─── Organizations Overview ─── */}
       <div className="rounded-md border bg-white p-6">
         <h2 className="text-xl font-semibold mb-4">Organizations on Platform</h2>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
-            <thead className="text-xs text-slate-700 uppercase bg-slate-50 border-b">
-              <tr>
-                <th className="px-6 py-3">Legal Name</th>
-                <th className="px-6 py-3">Members</th>
-                <th className="px-6 py-3">Clients</th>
-                <th className="px-6 py-3">Invoices</th>
-                <th className="px-6 py-3">Roles</th>
-                <th className="px-6 py-3">Created</th>
-              </tr>
-            </thead>
-            <tbody>
-              {organizations.map(org => (
-                <tr key={org.id} className="bg-white border-b hover:bg-slate-50">
-                  <td className="px-6 py-4 font-medium">{org.legalName}</td>
-                  <td className="px-6 py-4">{org._count.members}</td>
-                  <td className="px-6 py-4">{org._count.clients}</td>
-                  <td className="px-6 py-4">{org._count.invoices}</td>
-                  <td className="px-6 py-4">{org.roles.length}</td>
-                  <td className="px-6 py-4">{new Date(org.createdAt).toLocaleDateString()}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <SuperAdminClient organizations={organizations} />
       </div>
 
       {/* ─── Roles & Permissions Manager ─── */}

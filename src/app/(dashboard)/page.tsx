@@ -1,5 +1,7 @@
 import { getTenantSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import prisma from "@/lib/prisma";
+import { DashboardClient } from "./dashboard-client";
 
 export default async function DashboardPage() {
   const { user, organization } = await getTenantSession();
@@ -7,16 +9,34 @@ export default async function DashboardPage() {
   if (user.isSuperAdmin) {
     redirect("/super-admin");
   }
+  
+  if (!organization) {
+    return <div>No organization selected</div>;
+  }
 
-  return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-      <div className="rounded-md border bg-white p-8 shadow-sm">
-        <h2 className="text-xl font-semibold mb-2">Welcome to {organization?.displayName}</h2>
-        <p className="text-slate-600">
-          This is the dashboard overview. Use the sidebar to manage clients, projects, and invoices.
-        </p>
-      </div>
-    </div>
-  );
+  const [totalClients, totalProjects, totalInvoices, invoiceAggregate, recentInvoices] = await Promise.all([
+    prisma.client.count({ where: { organizationId: organization.id } }),
+    prisma.project.count({ where: { organizationId: organization.id } }),
+    prisma.invoice.count({ where: { organizationId: organization.id, status: 'FINALIZED' } }),
+    prisma.invoice.aggregate({
+      where: { organizationId: organization.id, status: 'FINALIZED' },
+      _sum: { totalAmount: true }
+    }),
+    prisma.invoice.findMany({
+      where: { organizationId: organization.id },
+      orderBy: { createdAt: 'desc' },
+      take: 10,
+      include: { client: true }
+    })
+  ]);
+
+  const stats = {
+    totalClients,
+    totalProjects,
+    totalInvoices,
+    totalInvoiceAmount: invoiceAggregate?._sum?.totalAmount || 0,
+    recentInvoices,
+  };
+
+  return <DashboardClient organizationName={organization.legalName} stats={stats} />;
 }

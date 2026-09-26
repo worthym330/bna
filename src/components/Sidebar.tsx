@@ -16,11 +16,8 @@ export async function Sidebar() {
             <Link href="/super-admin" className="block px-3 py-2 rounded-md hover:bg-slate-800 transition-colors">
               Organizations & Users
             </Link>
-            <Link href="#" className="block px-3 py-2 rounded-md hover:bg-slate-800 transition-colors text-slate-500 cursor-not-allowed">
-              System Settings (Soon)
-            </Link>
-            <Link href="#" className="block px-3 py-2 rounded-md hover:bg-slate-800 transition-colors text-slate-500 cursor-not-allowed">
-              Audit Logs (Soon)
+            <Link href="/settings/audit-logs" className="block px-3 py-2 rounded-md hover:bg-slate-800 transition-colors">
+              Global Audit Logs
             </Link>
           </>
         ) : (
@@ -37,6 +34,9 @@ export async function Sidebar() {
             <Link href="/invoices" className="block px-3 py-2 rounded-md hover:bg-slate-800 transition-colors">
               Invoices
             </Link>
+            <Link href="/credit-notes" className="block px-3 py-2 rounded-md hover:bg-slate-800 transition-colors">
+              Credit Notes
+            </Link>
             <Link href="/projects" className="block px-3 py-2 rounded-md hover:bg-slate-800 transition-colors">
               Projects
             </Link>
@@ -48,6 +48,9 @@ export async function Sidebar() {
             </Link>
             <Link href="/settings/templates" className="block px-3 py-2 rounded-md hover:bg-slate-800 transition-colors">
               Templates
+            </Link>
+            <Link href="/settings/audit-logs" className="block px-3 py-2 rounded-md hover:bg-slate-800 transition-colors">
+              Audit Logs
             </Link>
           </>
         )}

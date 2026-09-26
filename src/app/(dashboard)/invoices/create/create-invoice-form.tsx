@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { createDraftInvoiceAction } from "@/app/actions/invoices";
 import { calculateLineItemTax } from "@/lib/tax";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 
 const lineItemSchema = z.object({
   description: z.string().min(1, "Description is required"),
@@ -21,11 +21,13 @@ const lineItemSchema = z.object({
 
 const invoiceSchema = z.object({
   clientId: z.string().min(1, "Client is required"),
+  officeId: z.string().min(1, "Billing Office is required"),
   projectId: z.string().optional(),
   seriesId: z.string().optional(),
   templateId: z.string().optional(),
   invoiceDate: z.string().min(1, "Invoice Date is required"),
   dueDate: z.string().optional(),
+  taxType: z.enum(["CGST_SGST", "IGST"]).default("CGST_SGST"),
   notes: z.string().optional(),
   terms: z.string().optional(),
   lineItems: z.array(lineItemSchema).min(1, "At least one line item is required")
@@ -33,17 +35,20 @@ const invoiceSchema = z.object({
 
 type FormData = z.infer<typeof invoiceSchema>;
 
-export function CreateInvoiceForm({ clients, projects, series, templates, organization }: any) {
+export function CreateInvoiceForm({ clients, projects, series, templates, offices, organization }: any) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
   const defaultTemplate = templates?.find((t: any) => t.isDefault);
+  const defaultOffice = offices?.length === 1 ? offices[0].id : "";
 
-  const { register, control, handleSubmit, watch, formState: { errors } } = useForm<FormData>({
+  const { register, control, handleSubmit, watch, setValue, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(invoiceSchema) as any,
     defaultValues: {
       invoiceDate: new Date().toISOString().split('T')[0],
+      officeId: defaultOffice,
       templateId: defaultTemplate?.id || "",
+      taxType: "CGST_SGST",
       lineItems: [{ description: "", quantity: 1, unitPrice: 0, taxRate: 18 }]
     }
   });
@@ -55,6 +60,27 @@ export function CreateInvoiceForm({ clients, projects, series, templates, organi
 
   const watchLineItems = watch("lineItems");
   const watchClientId = watch("clientId");
+  const watchOfficeId = watch("officeId");
+  const watchTaxType = watch("taxType");
+
+  // Auto-detect tax type based on states
+  useEffect(() => {
+    if (watchClientId && watchOfficeId) {
+      const selectedClient = clients.find((c: any) => c.id === watchClientId);
+      const selectedOffice = offices.find((o: any) => o.id === watchOfficeId);
+      
+      const clientState = selectedClient?.state?.trim().toLowerCase();
+      const officeState = selectedOffice?.state?.trim().toLowerCase();
+      
+      if (clientState && officeState) {
+        if (clientState !== officeState) {
+          setValue("taxType", "IGST");
+        } else {
+          setValue("taxType", "CGST_SGST");
+        }
+      }
+    }
+  }, [watchClientId, watchOfficeId, clients, offices, setValue]);
 
   // Tax calculation
   const totals = useMemo(() => {
@@ -67,12 +93,11 @@ export function CreateInvoiceForm({ clients, projects, series, templates, organi
     const selectedClient = clients.find((c: any) => c.id === watchClientId);
     const orgState = organization.defaultCountry || ""; // Simple proxy, ideally state
     const clientState = selectedClient?.state || "";
-
     watchLineItems?.forEach(item => {
       const amount = (item.quantity || 0) * (item.unitPrice || 0);
       subTotal += amount;
       
-      const tax = calculateLineItemTax(amount, item.taxRate || 0, orgState, clientState);
+      const tax = calculateLineItemTax(amount, item.taxRate || 0, watchTaxType);
       taxTotal += tax.totalTax;
       cgst += tax.cgst;
       sgst += tax.sgst;
@@ -80,7 +105,7 @@ export function CreateInvoiceForm({ clients, projects, series, templates, organi
     });
 
     return { subTotal, taxTotal, totalAmount: subTotal + taxTotal, cgst, sgst, igst };
-  }, [watchLineItems, watchClientId, clients, organization]);
+  }, [watchLineItems, watchClientId, clients, organization, watchTaxType]);
 
   const onSubmit = async (data: FormData) => {
     setLoading(true);
@@ -91,7 +116,7 @@ export function CreateInvoiceForm({ clients, projects, series, templates, organi
         ...data,
         lineItems: data.lineItems.map(item => {
           const amount = item.quantity * item.unitPrice;
-          const tax = calculateLineItemTax(amount, item.taxRate, organization.defaultCountry || "", selectedClient?.state || "");
+          const tax = calculateLineItemTax(amount, item.taxRate, data.taxType as any);
           return {
             ...item,
             taxAmount: tax.totalTax
@@ -126,6 +151,20 @@ export function CreateInvoiceForm({ clients, projects, series, templates, organi
             ))}
           </select>
           {errors.clientId && <p className="text-sm text-red-500">{errors.clientId.message}</p>}
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Billing Office *</label>
+          <select 
+            {...register("officeId")} 
+            className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <option value="">Select an Office</option>
+            {offices.map((o: any) => (
+              <option key={o.id} value={o.id}>{o.siteName} ({o.state})</option>
+            ))}
+          </select>
+          {errors.officeId && <p className="text-sm text-red-500">{errors.officeId.message}</p>}
         </div>
 
         <div className="space-y-2">
@@ -176,6 +215,17 @@ export function CreateInvoiceForm({ clients, projects, series, templates, organi
         <div className="space-y-2">
           <label className="text-sm font-medium">Due Date</label>
           <Input type="date" {...register("dueDate")} />
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Tax Type *</label>
+          <select 
+            {...register("taxType")}
+            className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950"
+          >
+            <option value="CGST_SGST">CGST & SGST (Intra-state)</option>
+            <option value="IGST">IGST (Inter-state)</option>
+          </select>
         </div>
       </div>
 

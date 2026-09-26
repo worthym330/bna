@@ -14,14 +14,11 @@ export type TaxBreakdown = {
 export function calculateLineItemTax(
   amount: number,
   taxRatePercent: number,
-  providerState: string,
-  clientState: string
+  taxType: "CGST_SGST" | "IGST"
 ): TaxBreakdown {
-  const isInterState = providerState.trim().toLowerCase() !== clientState.trim().toLowerCase();
-  
   const totalTax = (amount * taxRatePercent) / 100;
 
-  if (isInterState) {
+  if (taxType === "IGST") {
     return {
       cgst: 0,
       sgst: 0,
