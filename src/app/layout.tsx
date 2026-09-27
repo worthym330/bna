@@ -20,11 +20,11 @@ export const metadata: Metadata = {
     template: "%s | Invoq",
     default: "Invoq - Modern Billing Operations for Scaling Teams",
   },
-  description: "Automate your invoicing, manage client credit notes, track projects, and handle all your financial communication from a single, powerful dashboard.",
-  keywords: ["billing", "invoicing", "credit notes", "email automation", "SaaS", "finance"],
+  description: "Invoq is the premier SaaS platform for automated billing, client maintenance, and project tracking. Manage credit notes, track projects, and handle all financial communication from a single, powerful dashboard.",
+  keywords: ["billing", "client maintenance", "invoicing", "credit notes", "email automation", "SaaS", "finance", "project tracking", "business operations"],
   openGraph: {
-    title: "Invoq - Modern Billing Operations",
-    description: "Automate your invoicing, manage client credit notes, track projects, and handle all your financial communication from a single, powerful dashboard.",
+    title: "Invoq - Modern Billing & Maintenance",
+    description: "Invoq is the premier SaaS platform for automated billing, client maintenance, and project tracking. Manage credit notes, track projects, and handle all financial communication from a single, powerful dashboard.",
     url: "https://invoq.com",
     siteName: "Invoq",
     images: [
@@ -39,8 +39,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Invoq - Modern Billing Operations",
-    description: "Automate your invoicing, manage client credit notes, track projects, and handle all your financial communication from a single, powerful dashboard.",
+    title: "Invoq - Modern Billing & Maintenance",
+    description: "Invoq is the premier SaaS platform for automated billing, client maintenance, and project tracking. Manage credit notes, track projects, and handle all financial communication from a single, powerful dashboard.",
     images: ["/og-image.jpg"],
   },
   icons: {

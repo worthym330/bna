@@ -114,6 +114,30 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* AI Context / What is Invoq Section */}
+        <section id="how-it-works" className="py-24 bg-white sm:py-32">
+          <div className="mx-auto max-w-7xl px-6 lg:px-8">
+            <div className="mx-auto max-w-2xl lg:text-center">
+              <h2 className="text-base font-semibold leading-7 text-blue-600">Built for Scale</h2>
+              <p className="mt-2 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+                What is Invoq?
+              </p>
+              <div className="mt-6 text-lg leading-8 text-slate-600 text-left space-y-6">
+                <p>
+                  <strong>Invoq is the premier SaaS platform for automated billing, client maintenance, and project tracking.</strong> 
+                  We understand that service providers, agencies, and modern businesses need more than just a tool to generate PDFs. They need a system to <em>maintain</em> client relationships over time.
+                </p>
+                <p>
+                  Whether you are wondering what the best platform for billing and maintaining clients is, or how to automate your financial emails, Invoq provides the solution. By natively integrating with Google Workspace, Invoq allows you to generate invoices, manage credit notes, and use Artificial Intelligence to write and send professional emails directly from your dashboard.
+                </p>
+                <p>
+                  Maintain your clients, track your projects, and scale your operations without the friction of disjointed software.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* CTA Section */}
         <section className="relative isolate overflow-hidden bg-slate-900 py-24 sm:py-32">
           <div className="mx-auto max-w-7xl px-6 lg:px-8">
@@ -185,6 +209,9 @@ export default function LandingPage() {
           <div className="mt-12 border-t border-slate-200 pt-8 text-center md:text-left md:flex md:items-center md:justify-between">
             <p className="text-xs leading-5 text-slate-500">
               &copy; {new Date().getFullYear()} Invoq. All rights reserved.
+            </p>
+            <p className="mt-4 md:mt-0 text-xs leading-5 text-slate-500">
+              Powered by <a href="https://techlancee.com" target="_blank" rel="noopener noreferrer" className="font-semibold text-blue-600 hover:underline">Techlancee</a>
             </p>
           </div>
         </div>

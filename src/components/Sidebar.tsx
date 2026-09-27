@@ -21,6 +21,9 @@ export async function Sidebar() {
             <Link href="/settings/audit-logs" className="block px-3 py-2 rounded-md hover:bg-slate-800 transition-colors">
               Global Audit Logs
             </Link>
+            <Link href="/super-admin/blogs" className="block px-3 py-2 rounded-md hover:bg-slate-800 transition-colors">
+              Manage Blogs
+            </Link>
           </>
         ) : (
           <>

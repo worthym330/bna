@@ -16,7 +16,8 @@ export default async function proxy(request: NextRequest) {
   const isPublicPath = request.nextUrl.pathname === '/' || 
                        request.nextUrl.pathname.startsWith('/privacy-policy') ||
                        request.nextUrl.pathname.startsWith('/terms-and-conditions') ||
-                       request.nextUrl.pathname.startsWith('/thank-you')
+                       request.nextUrl.pathname.startsWith('/thank-you') ||
+                       request.nextUrl.pathname.startsWith('/blogs')
 
   if (!token) {
     if (isAuthPath || isPublicPath) return NextResponse.next()

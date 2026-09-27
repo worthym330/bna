@@ -237,6 +237,40 @@ async function main() {
     console.log(`    ✓ Superadmin already exists`);
   }
 
+  // ─── 8. Seed Blogs ────────────────────────────────────────────────────────
+  console.log('  → Seeding blogs...');
+  const defaultBlogs = [
+    {
+      title: "The Future of Billing Operations",
+      slug: "future-of-billing-operations",
+      htmlContent: `<h1 class="text-4xl font-bold mb-6">The Future of Billing Operations</h1><p class="text-lg text-slate-700 leading-relaxed mb-6">Billing operations are no longer just about sending PDFs. Modern agencies need centralized ledgers, automated tracking, and built-in CRMs.</p>`,
+      isPublished: true,
+      designConfig: [
+        { id: "1", type: "H1", content: "The Future of Billing Operations" },
+        { id: "2", type: "P", content: "Billing operations are no longer just about sending PDFs. Modern agencies need centralized ledgers, automated tracking, and built-in CRMs." }
+      ]
+    },
+    {
+      title: "How AI is Changing Invoicing",
+      slug: "how-ai-is-changing-invoicing",
+      htmlContent: `<h1 class="text-4xl font-bold mb-6">How AI is Changing Invoicing</h1><p class="text-lg text-slate-700 leading-relaxed mb-6">Artificial intelligence is taking over the tedious task of drafting financial emails, calculating taxes, and predicting client payments.</p>`,
+      isPublished: true,
+      designConfig: [
+        { id: "1", type: "H1", content: "How AI is Changing Invoicing" },
+        { id: "2", type: "P", content: "Artificial intelligence is taking over the tedious task of drafting financial emails, calculating taxes, and predicting client payments." }
+      ]
+    }
+  ];
+
+  for (const b of defaultBlogs) {
+    await prisma.blog.upsert({
+      where: { slug: b.slug },
+      update: {},
+      create: b
+    });
+  }
+  console.log(`  ✓ ${defaultBlogs.length} blogs seeded`);
+
   console.log('\n✅ Seed complete!\n');
   console.log('─────────────────────────────────────────────');
   console.log('  Login Credentials:');
